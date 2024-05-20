@@ -1,0 +1,25 @@
+{
+  "templatePath": "C:\\test\\test.dotx",
+  "contentControls": [
+    {
+      "title": "system-capabilities",
+      "wordObjects": [
+        {
+          "type": "table",
+          "rows": [
+            {
+              "cells": [
+                {
+                  "attachments": {
+                    "type": "picture",
+                    "Path": "C:\\docgen\\documents\\181020205911\\downloads\\4b63f630-d0b4-4ab8-8d60-46df23b322c9\\gif 2.PNG"
+                  }
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

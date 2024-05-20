@@ -1,0 +1,46 @@
+{
+  "name": "@doc-gen/dg-skins",
+  "version": "0.4.0",
+  "description": "",
+  "main": "./bin/index.js",
+  "types": "./bin/index.d.ts",
+  "scripts": {
+    "start": "node ./bin/server.js",
+    "build": "tsc",
+    "test": "jest --coverage --runInBand --forceExit"
+  },
+  "repository": {
+    "type": "git",
+    "url": ""
+  },
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "@types/node": "^14.0.5",
+    "moment": "^2.26.0",
+    "string-strip-html": "^4.5.1",
+    "winston": "^3.2.1"
+  },
+  "devDependencies": {
+    "@types/babel__traverse": "^7.20.2",
+    "@types/jest": "^25.2.3",
+    "jest": "^25.5.4",
+    "jest-junit": "^10.0.0",
+    "ts-jest": "^25.5.1",
+    "typescript": "^5.2.2"
+  },
+  "jest": {
+    "testEnvironment": "node",
+    "preset": "ts-jest",
+    "testPathIgnorePatterns": [
+      "/bin/"
+    ],
+    "reporters": [
+      "default",
+      "jest-junit"
+    ]
+  },
+  "jest-junit": {
+    "output": "./junit.xml"
+  }
+}
