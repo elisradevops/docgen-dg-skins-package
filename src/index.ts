@@ -1,32 +1,24 @@
-import {
-  DocumentSkin,
-  WIQueryResults,
-  WIData,
-  WIProperty,
-  StyleOptions,
-} from "./models/json/wordJsonModels";
-import logger from "./services/logger";
-import JSONTable from "./models/json/table/JSONTable";
-import JSONParagraph from "./models/json/paragraph/JSONParagraph";
-import JSONHeaderParagraph from "./models/json/paragraph/JSONTestSuiteHeaderParagraph";
-import JSONRichTextParagraph from "./models/json/paragraph/JSONRichTextParagraph";
-import {
-  DescriptionandProcedureStyle
-} from "./models/json/default";
+import { DocumentSkin, WIQueryResults, WIData, WIProperty, StyleOptions } from './models/json/wordJsonModels';
+import logger from './services/logger';
+import JSONTable from './models/json/table/JSONTable';
+import JSONParagraph from './models/json/paragraph/JSONParagraph';
+import JSONHeaderParagraph from './models/json/paragraph/JSONTestSuiteHeaderParagraph';
+import JSONRichTextParagraph from './models/json/paragraph/JSONRichTextParagraph';
+import { DescriptionandProcedureStyle } from './models/json/default';
 
 export default class Skins {
-  SKIN_TYPE_TABLE = "table";
-  SKIN_TYPE_PARAGRAPH = "paragraph";
-  SKIN_TYPE_TEST_PLAN = "test-plan";
+  SKIN_TYPE_TABLE = 'table';
+  SKIN_TYPE_PARAGRAPH = 'paragraph';
+  SKIN_TYPE_TEST_PLAN = 'test-plan';
 
   documentSkin: DocumentSkin = {
-    templatePath: "",
+    templatePath: '',
     contentControls: [],
   };
 
-  skinFormat: string = "json";
+  skinFormat: string = 'json';
 
-  constructor(skinFormat: string = "json", templatePath: string) {
+  constructor(skinFormat: string = 'json', templatePath: string) {
     this.documentSkin.templatePath = templatePath;
     this.skinFormat = skinFormat;
   }
@@ -44,49 +36,28 @@ export default class Skins {
 
       switch (skinType) {
         case this.SKIN_TYPE_TABLE:
-          populatedSkin = this.generateQueryBasedTable(
-            data,
-            styles,
-            headingLvl
-          );
+          populatedSkin = this.generateQueryBasedTable(data, styles, headingLvl);
           if (populatedSkin === false) {
-            logger.error(
-              `Could not generate table for content control :${contetnControlTitle}`
-            );
+            logger.error(`Could not generate table for content control :${contetnControlTitle}`);
             return false;
           }
           break;
         case this.SKIN_TYPE_PARAGRAPH:
-          populatedSkin = this.generateQueryBasedParagraphs(
-            data,
-            styles,
-            headingLvl
-          );
+          populatedSkin = this.generateQueryBasedParagraphs(data, styles, headingLvl);
           if (populatedSkin === false) {
-            logger.error(
-              `Could not generate paragraph for content control :${contetnControlTitle}`
-            );
+            logger.error(`Could not generate paragraph for content control :${contetnControlTitle}`);
             return false;
           }
           break;
         case this.SKIN_TYPE_TEST_PLAN:
-          populatedSkin = this.generateTestBasedSkin(
-            data,
-            styles,
-            headingLvl,
-            includeAttachments
-          );
+          populatedSkin = this.generateTestBasedSkin(data, styles, headingLvl, includeAttachments);
           if (populatedSkin === false) {
-            logger.error(
-              `Could not generate test skin for content control :${contetnControlTitle}`
-            );
+            logger.error(`Could not generate test skin for content control :${contetnControlTitle}`);
             return false;
           }
           break;
         default:
-          logger.error(
-            `Unknown skinType : ${skinType} - not appended to document skin`
-          );
+          logger.error(`Unknown skinType : ${skinType} - not appended to document skin`);
           return false;
       }
 
@@ -97,9 +68,7 @@ export default class Skins {
       //   populatedSkin
       // );
     } catch (error) {
-      logger.error(
-        `Fatal error happened when generate skin for : ${contetnControlTitle}`
-      );
+      logger.error(`Fatal error happened when generate skin for : ${contetnControlTitle}`);
       return false;
     }
   } //addNewContentToDocumentSkin
@@ -107,10 +76,7 @@ export default class Skins {
   // iterates on content controls array:
   // if finds return true else creates content control and returns true
   // on error returns false
-  async validateAndAppendContentControl(
-    contetnControlTitle: string,
-    populatedSkin: any
-  ): Promise<boolean> {
+  async validateAndAppendContentControl(contetnControlTitle: string, populatedSkin: any): Promise<boolean> {
     try {
       let isContetnControlExists: boolean[] = await Promise.all(
         this.documentSkin.contentControls.map((contentControl, i) => {
@@ -138,9 +104,7 @@ export default class Skins {
            ${JSON.stringify(contetnControlTitle)}`);
         this.documentSkin.contentControls.unshift(contentControlToAppend);
       }
-      logger.info(
-        `Appended new content control document:  ${contetnControlTitle}`
-      );
+      logger.info(`Appended new content control document:  ${contetnControlTitle}`);
       return true;
     } catch (error) {
       logger.error(`Error validating and appending to content control`);
@@ -150,18 +114,14 @@ export default class Skins {
 
   //parses data to the class skin format and returns the parsed data
   //returns false if supplied an invalid type or error occurd during parsing
-  generateQueryBasedTable(
-    data: WIQueryResults,
-    styles: StyleOptions,
-    headingLvl: number = 0
-  ) {
+  generateQueryBasedTable(data: WIQueryResults, styles: StyleOptions, headingLvl: number = 0) {
     logger.debug(`Generating table as ${this.skinFormat}`);
 
     switch (this.skinFormat) {
-      case "json":
+      case 'json':
         let tableSkin = new JSONTable(data, styles, headingLvl);
         return [tableSkin.getJSONTable()];
-      case "html":
+      case 'html':
         logger.info(`Generating html table!`);
         break;
       default:
@@ -169,51 +129,30 @@ export default class Skins {
     } //switch
   } //generateTable
 
-  generateQueryBasedParagraphs(
-    data: any,
-    styles: StyleOptions,
-    headingLvl: number = 0
-  ) {
+  generateQueryBasedParagraphs(data: any, styles: StyleOptions, headingLvl: number = 0) {
     logger.debug(`Generating paragraph as ${this.skinFormat}`);
 
     switch (this.skinFormat) {
-      case "json":
+      case 'json':
         let paragraphs: any[] = [];
         data.forEach((wi: WIData) => {
           wi.fields.forEach((field: WIProperty) => {
             //Description and Test Description are handled in richText handler
-            if (
-              field.name === "Description: " ||
-              field.name === "Test Description:"
-            ) {       
-              let paragraphSkin = new JSONRichTextParagraph(
-                field,
-                styles,
-                wi.Source,
-                headingLvl + wi.level
-              );
+            if (field.name === 'Description: ' || field.name === 'Test Description:') {
+              let paragraphSkin = new JSONRichTextParagraph(field, styles, wi.Source, headingLvl + wi.level);
               paragraphs.push(paragraphSkin.getJSONRichTextParagraph());
             }
 
             //making sure ID is not printed
             //excluding Description and Test Description are handled in richText handler
-            if (
-              field.name !== "ID" &&
-              field.name !== "Description: " &&
-              field.name !== "Test Description:"
-            ) {
-              let paragraphSkin = new JSONParagraph(
-                field,
-                styles,
-                wi.Source,
-                headingLvl + wi.level
-              );
+            if (field.name !== 'ID' && field.name !== 'Description: ' && field.name !== 'Test Description:') {
+              let paragraphSkin = new JSONParagraph(field, styles, wi.Source, headingLvl + wi.level);
               paragraphs.push(paragraphSkin.getJSONParagraph());
             }
           });
         });
         return paragraphs;
-      case "html":
+      case 'html':
         logger.info(`Generating html paragraphs!`);
         break;
       default:
@@ -229,7 +168,7 @@ export default class Skins {
   ) {
     logger.debug(`Generating testSkin as ${this.skinFormat}`);
     switch (this.skinFormat) {
-      case "json":
+      case 'json':
         let testSkin: any[] = [];
         //create suite Header pragraph
         data.forEach((testSuite: any) => {
@@ -239,7 +178,7 @@ export default class Skins {
             IsUnderline: false,
             Size: 16,
             Uri: null,
-            Font: "Arial",
+            Font: 'Arial',
             InsertLineBreak: false,
             InsertSpace: true,
           };
@@ -267,7 +206,7 @@ export default class Skins {
               IsUnderline: false,
               Size: 14,
               Uri: null,
-              Font: "Arial",
+              Font: 'Arial',
               InsertLineBreak: false,
               InsertSpace: true,
             };
@@ -284,11 +223,11 @@ export default class Skins {
             testSkin.push(testCaseParagraphSkin.getJSONParagraph());
 
             let testDescriptionTitleParagraph = new JSONParagraph(
-              { name: "Title", value: "Test Description:" },
+              { name: 'Title', value: 'Test Description:' },
               DescriptionandProcedureStyle,
               testcase.id || 0,
               0
-            );     
+            );
             testSkin.push(testDescriptionTitleParagraph.getJSONParagraph());
             let testDescriptionParagraph = new JSONRichTextParagraph(
               testcase.testCaseHeaderSkinData.fields[2],
@@ -296,39 +235,49 @@ export default class Skins {
               testcase.id || 0,
               0
             );
-            let richTextSkin: any[] =
-              testDescriptionParagraph.getJSONRichTextParagraph();
+            let richTextSkin: any[] = testDescriptionParagraph.getJSONRichTextParagraph();
             testSkin = [...testSkin, ...richTextSkin];
-            
+
             if (testcase.testCaseRequirements) {
-              if (
-                testcase.testCaseRequirements.length > 0
-              ) {
-                
+              if (testcase.testCaseRequirements.length > 0) {
                 let testDescriptionTitleParagraph = new JSONParagraph(
-                  { name: "Title", value: "Covered Requirements:" },
+                  { name: 'Title', value: 'Covered Requirements:' },
                   DescriptionandProcedureStyle,
                   testcase.id || 0,
                   0
                 );
                 testSkin.push(testDescriptionTitleParagraph.getJSONParagraph());
                 //create test steps table
-                let tableSkin = new JSONTable(
-                  testcase.testCaseRequirements,
-                  styles,
-                  headingLvl
-                );
+                let tableSkin = new JSONTable(testcase.testCaseRequirements, styles, headingLvl);
 
                 let populatedTableSkin = tableSkin.getJSONTable();
 
                 testSkin.push(populatedTableSkin);
               }
             }
-            
+
+            if (testcase.testCaseBugs) {
+              if (testcase.testCaseBugs.length > 0) {
+                let testDescriptionTitleParagraph = new JSONParagraph(
+                  { name: 'Title', value: 'Linked Bugs:' },
+                  DescriptionandProcedureStyle,
+                  testcase.id || 0,
+                  0
+                );
+                testSkin.push(testDescriptionTitleParagraph.getJSONParagraph());
+                //create test steps table
+                let tableSkin = new JSONTable(testcase.testCaseBugs, styles, headingLvl);
+
+                let populatedTableSkin = tableSkin.getJSONTable();
+
+                testSkin.push(populatedTableSkin);
+              }
+            }
+
             try {
               if (testcase.testCaseStepsSkinData.length > 0) {
                 let testProcedureTitleParagraph = new JSONParagraph(
-                  { name: "Title", value: "Test Procedure:" },
+                  { name: 'Title', value: 'Test Procedure:' },
                   DescriptionandProcedureStyle,
                   testcase.id || 0,
                   0
@@ -339,17 +288,13 @@ export default class Skins {
                   IsUnderline: false,
                   Size: 12,
                   Uri: null,
-                  Font: "Arial",
+                  Font: 'Arial',
                   InsertLineBreak: false,
                   InsertSpace: true,
                 };
                 testSkin.push(testProcedureTitleParagraph.getJSONParagraph());
                 //create test steps table
-                let tableSkin = new JSONTable(
-                  testcase.testCaseStepsSkinData,
-                  TableContentStyles,
-                  headingLvl
-                );
+                let tableSkin = new JSONTable(testcase.testCaseStepsSkinData, TableContentStyles, headingLvl);
                 let populatedTableSkin = tableSkin.getJSONTable();
                 testSkin.push(populatedTableSkin);
               }
@@ -357,28 +302,20 @@ export default class Skins {
               logger.warn(
                 `For suite id : ${testSuite.suiteSkinData.fields[0].value} , the testCaseStepsSkinData is not defined for ${testcase.testCaseHeaderSkinData.fields[0].value} `
               );
-           }
+            }
 
             //attachments table
             if (testcase.testCaseAttachments) {
-              if (
-                testcase.testCaseAttachments.length > 0 &&
-                includeAttachments == true
-              ) {
-                
+              if (testcase.testCaseAttachments.length > 0 && includeAttachments == true) {
                 let testDescriptionTitleParagraph = new JSONParagraph(
-                  { name: "Title", value: "Test Case Attachments:" },
+                  { name: 'Title', value: 'Test Case Attachments:' },
                   styles,
                   testcase.id || 0,
                   0
                 );
                 testSkin.push(testDescriptionTitleParagraph.getJSONParagraph());
                 //create test steps table
-                let tableSkin = new JSONTable(
-                  testcase.testCaseAttachments,
-                  styles,
-                  headingLvl
-                );
+                let tableSkin = new JSONTable(testcase.testCaseAttachments, styles, headingLvl);
                 let populatedTableSkin = tableSkin.getJSONTable();
                 testSkin.push(populatedTableSkin);
               }
@@ -387,7 +324,7 @@ export default class Skins {
         });
         return testSkin;
         break;
-      case "html":
+      case 'html':
         logger.info(`Generating html test data!`);
         break;
       default:
