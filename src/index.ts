@@ -315,7 +315,7 @@ export default class Skins {
                 );
                 testSkin.push(testDescriptionTitleParagraph.getJSONParagraph());
                 //create test steps table
-                let tableSkin = new JSONTable(testcase.testCaseAttachments, styles, headingLvl);
+                let tableSkin = new JSONTable(testcase.testCaseAttachments, styles, headingLvl, true);
                 let populatedTableSkin = tableSkin.getJSONTable();
                 testSkin.push(populatedTableSkin);
               }
