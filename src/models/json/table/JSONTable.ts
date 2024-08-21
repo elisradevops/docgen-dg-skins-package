@@ -1,31 +1,20 @@
-import logger from "../../../services/logger";
-import {
-  Table,
-  TableRow,
-  WIQueryResults,
-  WIData,
-  WIProperty,
-  StyleOptions,
-} from "../wordJsonModels";
-import JSONTableRow from "./JSONTableRow";
+import logger from '../../../services/logger';
+import { Table, TableRow, WIQueryResults, WIData, WIProperty, StyleOptions } from '../wordJsonModels';
+import JSONTableRow from './JSONTableRow';
 export default class JSONTable {
   tableTemplate: Table;
   tableStyles: StyleOptions;
 
-  constructor(
-    data: WIQueryResults,
-    tableStyles: StyleOptions,
-    headingLvl: number
-  ) {
+  constructor(data: WIQueryResults, tableStyles: StyleOptions, headingLvl: number, retrieveOriginal = false) {
     this.tableStyles = tableStyles;
     this.tableTemplate = {
-      type: "table",
+      type: 'table',
       headingLevel: headingLvl,
-      Rows: this.generateJsonRows(data, this.tableStyles),
+      Rows: this.generateJsonRows(data, this.tableStyles, retrieveOriginal),
     };
   }
 
-  generateJsonRows(data: any, tableStyles: StyleOptions): TableRow[] {
+  generateJsonRows(data: any, tableStyles: StyleOptions, retrieveOriginal: boolean): TableRow[] {
     let rows: TableRow[] = [];
     let headersRowData: WIData = this.headersRowAdapter(data[0]);
 
@@ -35,7 +24,7 @@ export default class JSONTable {
       IsUnderline: false,
       Size: 12,
       Uri: null,
-      Font: "Arial",
+      Font: 'Arial',
       InsertLineBreak: false,
       InsertSpace: false,
     };
@@ -44,7 +33,7 @@ export default class JSONTable {
     rows.push(headersRow.getRow());
 
     data.forEach((rowData: WIData) => {
-      let row = new JSONTableRow(rowData, tableStyles);
+      let row = new JSONTableRow(rowData, tableStyles, retrieveOriginal);
       rows.push(row.getRow());
     });
 
@@ -55,14 +44,13 @@ export default class JSONTable {
     let headerValuesWi;
     try {
       headerValuesWi = data.fields.map((field: WIProperty) => {
-        return { name: "header", value: field.name };
+        return { name: 'header', value: field.name };
       });
-
     } catch (error) {
       logger.error(`no fields to append`);
     }
     return {
-      url: "",
+      url: '',
       fields: headerValuesWi,
       Source: 999999999999,
       level: data.level,
