@@ -1,6 +1,7 @@
 import { extname } from 'path';
 import {
   TableCell,
+  Shading,
   Run,
   Attachment,
   WIProperty,
@@ -13,8 +14,8 @@ import logger from '../../../services/logger';
 
 export default class JSONTableCell {
   cell: TableCell;
-  constructor(data: WIProperty, tableStyles: StyleOptions, retrieveOriginal = false) {
-    this.cell = this.generateJsonCell(data, tableStyles, retrieveOriginal);
+  constructor(data: WIProperty, tableStyles: StyleOptions, retrieveOriginal = false, shading = undefined) {
+    this.cell = this.generateJsonCell(data, tableStyles, retrieveOriginal, shading);
   }
 
   private removeFileExtension(filePath) {
@@ -25,11 +26,15 @@ export default class JSONTableCell {
     return filePath; // If there's no extension, return the original file path
   }
 
-  generateJsonCell(data: WIProperty | MultipeValuesWIProperty, styles, retrieveOriginal): TableCell {
+  generateJsonCell(
+    data: WIProperty | MultipeValuesWIProperty,
+    styles,
+    retrieveOriginal,
+    shading: Shading
+  ): TableCell {
     let runs: Run[] = [];
     let attachments: Attachment[] = [];
     let HtmlData: string = '';
-
     //multiple values
     if (typeof data.value !== 'string' && typeof data.value !== 'number' && data.value) {
       data.value.forEach((runData) => {
@@ -81,6 +86,7 @@ export default class JSONTableCell {
           },
         ],
         Html,
+        shading: shading,
       };
     } else {
       return {
@@ -90,6 +96,7 @@ export default class JSONTableCell {
             Runs: runs,
           },
         ],
+        shading: shading,
       };
     }
   } //generateJsonCells

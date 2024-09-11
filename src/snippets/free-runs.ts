@@ -1,23 +1,35 @@
-import Skins from "../index";
+import Skins from '../index';
 
 let main = async () => {
+  let headerStyles = {
+    isBold: true,
+    IsItalic: false,
+    IsUnderline: false,
+    Size: 12,
+    Uri: null,
+    Font: 'Arial',
+    InsertLineBreak: false,
+    InsertSpace: true,
+  };
+
   let styles = {
     isBold: false,
     IsItalic: false,
     IsUnderline: false,
     Size: 12,
     Uri: null,
-    Font: "Arial",
+    Font: 'Arial',
     InsertLineBreak: false,
     InsertSpace: true,
   };
 
-  let skins = new Skins("json", "c:\test.dotx");
-  const QueryData = require("../../samples/mock-data/queries/flat-query-data.json");
+  let skins = new Skins('json', 'c:\test.dotx');
+  const QueryData = require('../../samples/mock-data/queries/flat-query-data.json');
   await skins.addNewContentToDocumentSkin(
-    "test",
+    'test',
     skins.SKIN_TYPE_PARAGRAPH,
     QueryData,
+    headerStyles,
     styles,
     4
   );

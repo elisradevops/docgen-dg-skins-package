@@ -1,24 +1,43 @@
 import logger from '../../../services/logger';
-import { Table, TableRow, WIQueryResults, WIData, WIProperty, StyleOptions } from '../wordJsonModels';
+import {
+  Table,
+  TableRow,
+  WIQueryResults,
+  WIData,
+  WIProperty,
+  StyleOptions,
+  Shading,
+} from '../wordJsonModels';
 import JSONTableRow from './JSONTableRow';
 export default class JSONTable {
   tableTemplate: Table;
   tableStyles: StyleOptions;
 
-  constructor(data: WIQueryResults, tableStyles: StyleOptions, headingLvl: number, retrieveOriginal = false) {
+  constructor(
+    data: WIQueryResults,
+    headerRowStyle: StyleOptions,
+    tableStyles: StyleOptions,
+    headingLvl: number,
+    retrieveOriginal = false
+  ) {
     this.tableStyles = tableStyles;
     this.tableTemplate = {
       type: 'table',
       headingLevel: headingLvl,
-      Rows: this.generateJsonRows(data, this.tableStyles, retrieveOriginal),
+      Rows: this.generateJsonRows(data, headerRowStyle, this.tableStyles, retrieveOriginal),
     };
   }
 
-  generateJsonRows(data: any, tableStyles: StyleOptions, retrieveOriginal: boolean): TableRow[] {
+  generateJsonRows(
+    data: any,
+    headerRowStyle: StyleOptions,
+    tableStyles: StyleOptions,
+    retrieveOriginal: boolean
+  ): TableRow[] {
     let rows: TableRow[] = [];
     let headersRowData: WIData = this.headersRowAdapter(data[0]);
 
-    let style2 = {
+    const defaultHeaderRowStyle = {
       isBold: true,
       IsItalic: false,
       IsUnderline: false,
@@ -28,8 +47,21 @@ export default class JSONTable {
       InsertLineBreak: false,
       InsertSpace: false,
     };
-    let headersRow = new JSONTableRow(headersRowData, style2);
 
+    // Use the provided style or fall back to the default style
+    const finalHeaderRowStyle = headerRowStyle ?? defaultHeaderRowStyle;
+
+    // Determine if shading is needed
+    const headerShading =
+      headerRowStyle === undefined
+        ? undefined
+        : {
+            color: 'auto',
+            fill: '17365D',
+            themeFillShade: 'BF',
+          };
+
+    const headersRow = new JSONTableRow(headersRowData, finalHeaderRowStyle, undefined, headerShading);
     rows.push(headersRow.getRow());
 
     data.forEach((rowData: WIData) => {
