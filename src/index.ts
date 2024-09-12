@@ -27,6 +27,7 @@ export default class Skins {
     contetnControlTitle: string,
     skinType: string,
     data: any,
+    headerStyles: StyleOptions,
     styles: StyleOptions,
     headingLvl: number = 0,
     includeAttachments: boolean = true
@@ -36,7 +37,7 @@ export default class Skins {
 
       switch (skinType) {
         case this.SKIN_TYPE_TABLE:
-          populatedSkin = this.generateQueryBasedTable(data, styles, headingLvl);
+          populatedSkin = this.generateQueryBasedTable(data, headerStyles, styles, headingLvl);
           if (populatedSkin === false) {
             logger.error(`Could not generate table for content control :${contetnControlTitle}`);
             return false;
@@ -50,7 +51,13 @@ export default class Skins {
           }
           break;
         case this.SKIN_TYPE_TEST_PLAN:
-          populatedSkin = this.generateTestBasedSkin(data, styles, headingLvl, includeAttachments);
+          populatedSkin = this.generateTestBasedSkin(
+            data,
+            headerStyles,
+            styles,
+            headingLvl,
+            includeAttachments
+          );
           if (populatedSkin === false) {
             logger.error(`Could not generate test skin for content control :${contetnControlTitle}`);
             return false;
@@ -114,12 +121,17 @@ export default class Skins {
 
   //parses data to the class skin format and returns the parsed data
   //returns false if supplied an invalid type or error occurd during parsing
-  generateQueryBasedTable(data: WIQueryResults, styles: StyleOptions, headingLvl: number = 0) {
+  generateQueryBasedTable(
+    data: WIQueryResults,
+    headerStyles: StyleOptions,
+    styles: StyleOptions,
+    headingLvl: number = 0
+  ) {
     logger.debug(`Generating table as ${this.skinFormat}`);
 
     switch (this.skinFormat) {
       case 'json':
-        let tableSkin = new JSONTable(data, styles, headingLvl);
+        let tableSkin = new JSONTable(data, headerStyles, styles, headingLvl);
         return [tableSkin.getJSONTable()];
       case 'html':
         logger.info(`Generating html table!`);
@@ -162,6 +174,7 @@ export default class Skins {
 
   generateTestBasedSkin(
     data: any,
+    headerStyles: StyleOptions,
     styles: StyleOptions,
     headingLvl: number = 0,
     includeAttachments: boolean = true
@@ -189,8 +202,8 @@ export default class Skins {
             testSuite.suiteSkinData.level
               ? headingLvl + testSuite.suiteSkinData.level
               : headingLvl
-              ? headingLvl
-              : 1
+                ? headingLvl
+                : 1
           );
           testSkin.push(testSuiteParagraphSkin.getJSONParagraph());
 
@@ -217,8 +230,8 @@ export default class Skins {
               testcase.testCaseHeaderSkinData.level
                 ? headingLvl + testcase.testCaseHeaderSkinData.level
                 : headingLvl
-                ? headingLvl
-                : 1
+                  ? headingLvl
+                  : 1
             );
             testSkin.push(testCaseParagraphSkin.getJSONParagraph());
 
@@ -248,7 +261,12 @@ export default class Skins {
                 );
                 testSkin.push(testDescriptionTitleParagraph.getJSONParagraph());
                 //create test steps table
-                let tableSkin = new JSONTable(testcase.testCaseRequirements, styles, headingLvl);
+                let tableSkin = new JSONTable(
+                  testcase.testCaseRequirements,
+                  headerStyles,
+                  styles,
+                  headingLvl
+                );
 
                 let populatedTableSkin = tableSkin.getJSONTable();
 
@@ -266,7 +284,7 @@ export default class Skins {
                 );
                 testSkin.push(testDescriptionTitleParagraph.getJSONParagraph());
                 //create test steps table
-                let tableSkin = new JSONTable(testcase.testCaseBugs, styles, headingLvl);
+                let tableSkin = new JSONTable(testcase.testCaseBugs, headerStyles, styles, headingLvl);
 
                 let populatedTableSkin = tableSkin.getJSONTable();
 
@@ -294,7 +312,12 @@ export default class Skins {
                 };
                 testSkin.push(testProcedureTitleParagraph.getJSONParagraph());
                 //create test steps table
-                let tableSkin = new JSONTable(testcase.testCaseStepsSkinData, TableContentStyles, headingLvl);
+                let tableSkin = new JSONTable(
+                  testcase.testCaseStepsSkinData,
+                  headerStyles,
+                  TableContentStyles,
+                  headingLvl
+                );
                 let populatedTableSkin = tableSkin.getJSONTable();
                 testSkin.push(populatedTableSkin);
               }
@@ -315,7 +338,13 @@ export default class Skins {
                 );
                 testSkin.push(testDescriptionTitleParagraph.getJSONParagraph());
                 //create test steps table
-                let tableSkin = new JSONTable(testcase.testCaseAttachments, styles, headingLvl, true);
+                let tableSkin = new JSONTable(
+                  testcase.testCaseAttachments,
+                  styles,
+                  headerStyles,
+                  headingLvl,
+                  true
+                );
                 let populatedTableSkin = tableSkin.getJSONTable();
                 testSkin.push(populatedTableSkin);
               }

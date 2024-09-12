@@ -28,10 +28,18 @@ export interface TableCell {
   Paragraphs: [
     {
       Runs: Run[];
-    }
+    },
   ];
-  Html?:JsonHtml
+  shading?: Shading;
+  Html?: JsonHtml;
 }
+
+export interface Shading {
+  color: string;
+  fill: string;
+  themeFillShade: string;
+}
+
 export interface Paragraph {
   type: string;
   headingLevel?: number;
