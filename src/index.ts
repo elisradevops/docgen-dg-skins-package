@@ -340,7 +340,6 @@ export default class Skins {
                   testSkin.push(testDescriptionTitleParagraph.getJSONParagraph());
                   //create test steps table
 
-                  logger.info(`test attachments ${JSON.stringify(testcase.testCaseAttachments)}`);
                   let tableSkin = new JSONTable(
                     testcase.testCaseAttachments,
                     headerStyles,

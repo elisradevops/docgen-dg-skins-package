@@ -49,6 +49,8 @@ export interface Paragraph {
 export interface Attachment {
   type: string;
   path: string;
+  name: string;
+  isLinkedFile?: boolean;
 }
 export interface Run {
   text: string;
@@ -88,6 +90,7 @@ export interface WIProperty {
   url?: string;
   relativeUrl?: string;
   attachmentLink?: string;
+  attachmentType?: string;
   relativeAttachmentLink?: string;
   richText?: any[];
 }
@@ -98,6 +101,7 @@ export interface MultipeValuesWIProperty {
   url?: string;
   relativeUrl?: string;
   attachmentLink?: string;
+  attachmentType?: string;
   relativeAttachmentLink?: string;
   richText?: any[];
 }
