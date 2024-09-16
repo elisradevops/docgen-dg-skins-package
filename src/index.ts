@@ -328,26 +328,33 @@ export default class Skins {
             }
 
             //attachments table
-            if (testcase.testCaseAttachments) {
-              if (testcase.testCaseAttachments.length > 0 && includeAttachments == true) {
-                let testDescriptionTitleParagraph = new JSONParagraph(
-                  { name: 'Title', value: 'Test Case Attachments:' },
-                  styles,
-                  testcase.id || 0,
-                  0
-                );
-                testSkin.push(testDescriptionTitleParagraph.getJSONParagraph());
-                //create test steps table
-                let tableSkin = new JSONTable(
-                  testcase.testCaseAttachments,
-                  styles,
-                  headerStyles,
-                  headingLvl,
-                  true
-                );
-                let populatedTableSkin = tableSkin.getJSONTable();
-                testSkin.push(populatedTableSkin);
+            try {
+              if (testcase.testCaseAttachments) {
+                if (testcase.testCaseAttachments.length > 0 && includeAttachments) {
+                  let testDescriptionTitleParagraph = new JSONParagraph(
+                    { name: 'Title', value: 'Test Case Attachments:' },
+                    styles,
+                    testcase.id || 0,
+                    0
+                  );
+                  testSkin.push(testDescriptionTitleParagraph.getJSONParagraph());
+                  //create test steps table
+
+                  logger.info(`test attachments ${JSON.stringify(testcase.testCaseAttachments)}`);
+                  let tableSkin = new JSONTable(
+                    testcase.testCaseAttachments,
+                    headerStyles,
+                    styles,
+                    headingLvl,
+                    true
+                  );
+                  let populatedTableSkin = tableSkin.getJSONTable();
+                  testSkin.push(populatedTableSkin);
+                }
               }
+            } catch (error: any) {
+              logger.error(`Error occurred when building attachments ${error.message}}`);
+              logger.error(`Stack: ${error.stack}}`);
             }
           });
         });

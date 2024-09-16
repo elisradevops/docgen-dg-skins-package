@@ -31,6 +31,7 @@ export interface TableCell {
     },
   ];
   shading?: Shading;
+  width?: string;
   Html?: JsonHtml;
 }
 
@@ -83,6 +84,7 @@ export interface WIData {
 export interface WIProperty {
   name: string;
   value: any;
+  width?: string;
   url?: string;
   relativeUrl?: string;
   attachmentLink?: string;
@@ -92,6 +94,7 @@ export interface WIProperty {
 export interface MultipeValuesWIProperty {
   name: string;
   value: any[];
+  width?: string;
   url?: string;
   relativeUrl?: string;
   attachmentLink?: string;

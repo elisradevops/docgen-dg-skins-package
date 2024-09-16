@@ -86,6 +86,7 @@ export default class JSONTableCell {
           },
         ],
         Html,
+        width: data.width || '',
         shading: shading,
       };
     } else {
@@ -96,6 +97,7 @@ export default class JSONTableCell {
             Runs: runs,
           },
         ],
+        width: data.width || '',
         shading: shading,
       };
     }
