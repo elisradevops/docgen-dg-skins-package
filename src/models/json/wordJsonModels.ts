@@ -31,6 +31,7 @@ export interface TableCell {
     },
   ];
   shading?: Shading;
+  width?: string;
   Html?: JsonHtml;
 }
 
@@ -48,6 +49,8 @@ export interface Paragraph {
 export interface Attachment {
   type: string;
   path: string;
+  name: string;
+  isLinkedFile?: boolean;
 }
 export interface Run {
   text: string;
@@ -83,18 +86,22 @@ export interface WIData {
 export interface WIProperty {
   name: string;
   value: any;
+  width?: string;
   url?: string;
   relativeUrl?: string;
   attachmentLink?: string;
+  attachmentType?: string;
   relativeAttachmentLink?: string;
   richText?: any[];
 }
 export interface MultipeValuesWIProperty {
   name: string;
   value: any[];
+  width?: string;
   url?: string;
   relativeUrl?: string;
   attachmentLink?: string;
+  attachmentType?: string;
   relativeAttachmentLink?: string;
   richText?: any[];
 }

@@ -53,6 +53,7 @@ export default class JSONTableCell {
               type: 'File',
               path: runData.attachmentLink,
               name: this.removeFileExtension(runData.attachmentFileName),
+              isLinkedFile: data.attachmentType === 'asLink',
             };
             attachments.push(attachment);
           }
@@ -86,6 +87,7 @@ export default class JSONTableCell {
           },
         ],
         Html,
+        width: data.width || '',
         shading: shading,
       };
     } else {
@@ -96,6 +98,7 @@ export default class JSONTableCell {
             Runs: runs,
           },
         ],
+        width: data.width || '',
         shading: shading,
       };
     }

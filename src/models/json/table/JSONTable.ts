@@ -76,7 +76,7 @@ export default class JSONTable {
     let headerValuesWi;
     try {
       headerValuesWi = data.fields.map((field: WIProperty) => {
-        return { name: 'header', value: field.name };
+        return { name: 'header', value: field.name, width: field.width || '' };
       });
     } catch (error) {
       logger.error(`no fields to append`);
