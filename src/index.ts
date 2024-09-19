@@ -8,6 +8,7 @@ import { DescriptionandProcedureStyle } from './models/json/default';
 
 export default class Skins {
   SKIN_TYPE_TABLE = 'table';
+  SKIN_TYPE_TABLE_STR = 'str-table';
   SKIN_TYPE_PARAGRAPH = 'paragraph';
   SKIN_TYPE_TEST_PLAN = 'test-plan';
 
@@ -30,7 +31,8 @@ export default class Skins {
     headerStyles: StyleOptions,
     styles: StyleOptions,
     headingLvl: number = 0,
-    includeAttachments: boolean = true
+    includeAttachments: boolean = true,
+    insertPageBreak?: boolean
   ): Promise<any> {
     try {
       let populatedSkin;
@@ -40,6 +42,20 @@ export default class Skins {
           populatedSkin = this.generateQueryBasedTable(data, headerStyles, styles, headingLvl);
           if (populatedSkin === false) {
             logger.error(`Could not generate table for content control :${contetnControlTitle}`);
+            return false;
+          }
+          break;
+        case this.SKIN_TYPE_TABLE_STR:
+          const insertPageBreakEnabled: boolean = insertPageBreak ?? false;
+          populatedSkin = this.generateStrBasedTable(
+            data,
+            headerStyles,
+            styles,
+            headingLvl,
+            insertPageBreakEnabled
+          );
+          if (populatedSkin === false) {
+            logger.error(`Could not generate STR table for content control :${contetnControlTitle}`);
             return false;
           }
           break;
@@ -76,6 +92,8 @@ export default class Skins {
       // );
     } catch (error) {
       logger.error(`Fatal error happened when generate skin for : ${contetnControlTitle}`);
+      logger.error(`Error Message: ${error.message}`);
+      logger.error(`Error Stack: ${error.stack}`);
       return false;
     }
   } //addNewContentToDocumentSkin
@@ -128,17 +146,46 @@ export default class Skins {
     headingLvl: number = 0
   ) {
     logger.debug(`Generating table as ${this.skinFormat}`);
+    try {
+      switch (this.skinFormat) {
+        case 'json':
+          let tableSkin = new JSONTable(data, headerStyles, styles, headingLvl);
+          return [tableSkin.getJSONTable()];
+        case 'html':
+          logger.info(`Generating html table!`);
+          break;
+        default:
+          return false;
+      } //switch
+    } catch (error: any) {
+      logger.error(`Error occurred in generateQueryBasedTable: ${error.message}`);
+      logger.error(`Error Stack: ${error.stack}`);
+    }
+  } //generateTable
 
-    switch (this.skinFormat) {
-      case 'json':
-        let tableSkin = new JSONTable(data, headerStyles, styles, headingLvl);
-        return [tableSkin.getJSONTable()];
-      case 'html':
-        logger.info(`Generating html table!`);
-        break;
-      default:
-        return false;
-    } //switch
+  generateStrBasedTable(
+    data: WIQueryResults,
+    headerStyles: StyleOptions,
+    styles: StyleOptions,
+    headingLvl: number = 0,
+    insertPageBreak: boolean
+  ) {
+    logger.debug(`Generating table as ${this.skinFormat}`);
+    try {
+      switch (this.skinFormat) {
+        case 'json':
+          let tableSkin = new JSONTable(data, headerStyles, styles, headingLvl, undefined, insertPageBreak);
+          return [tableSkin.getJSONTable()];
+        case 'html':
+          logger.info(`Generating html table!`);
+          break;
+        default:
+          return false;
+      } //switch
+    } catch (error: any) {
+      logger.error(`Error occurred in generateQueryBasedTable: ${error.message}`);
+      logger.error(`Error Stack: ${error.stack}`);
+    }
   } //generateTable
 
   generateQueryBasedParagraphs(data: any, styles: StyleOptions, headingLvl: number = 0) {
@@ -300,22 +347,12 @@ export default class Skins {
                   testcase.id || 0,
                   0
                 );
-                let TableContentStyles = {
-                  isBold: false,
-                  IsItalic: false,
-                  IsUnderline: false,
-                  Size: 12,
-                  Uri: null,
-                  Font: 'Arial',
-                  InsertLineBreak: false,
-                  InsertSpace: true,
-                };
                 testSkin.push(testProcedureTitleParagraph.getJSONParagraph());
                 //create test steps table
                 let tableSkin = new JSONTable(
                   testcase.testCaseStepsSkinData,
                   headerStyles,
-                  TableContentStyles,
+                  styles,
                   headingLvl
                 );
                 let populatedTableSkin = tableSkin.getJSONTable();

@@ -19,6 +19,8 @@ export interface ContetControlSkin {
 export interface JsonHtml {
   type: string;
   Html: string;
+  font: string;
+  fontSize: number;
 }
 export interface TableRow {
   Cells: TableCell[];
@@ -69,6 +71,7 @@ export interface Table {
   type: string;
   headingLevel: number;
   Rows: TableRow[];
+  insertPageBreak: boolean;
 }
 export interface WIQueryResults {
   columns: WIColumns[];
