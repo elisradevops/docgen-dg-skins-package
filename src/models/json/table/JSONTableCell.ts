@@ -78,6 +78,8 @@ export default class JSONTableCell {
       let Html: JsonHtml = {
         type: 'html',
         Html: HtmlData,
+        font: 'Arial',
+        fontSize: 10,
       };
       return {
         attachments: attachments,

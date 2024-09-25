@@ -18,13 +18,15 @@ export default class JSONTable {
     headerRowStyle: StyleOptions,
     tableStyles: StyleOptions,
     headingLvl: number,
-    retrieveOriginal = false
+    retrieveOriginal = false,
+    insertPageBreak: boolean = false
   ) {
     this.tableStyles = tableStyles;
     this.tableTemplate = {
       type: 'table',
       headingLevel: headingLvl,
       Rows: this.generateJsonRows(data, headerRowStyle, this.tableStyles, retrieveOriginal),
+      insertPageBreak: insertPageBreak,
     };
   }
 
