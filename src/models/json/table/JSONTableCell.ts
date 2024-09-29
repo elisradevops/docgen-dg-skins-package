@@ -14,8 +14,14 @@ import logger from '../../../services/logger';
 
 export default class JSONTableCell {
   cell: TableCell;
-  constructor(data: WIProperty, tableStyles: StyleOptions, retrieveOriginal = false, shading = undefined) {
-    this.cell = this.generateJsonCell(data, tableStyles, retrieveOriginal, shading);
+  constructor(
+    data: WIProperty,
+    tableStyles: StyleOptions,
+    retrieveOriginal = false,
+    shading = undefined,
+    isFlattened = false
+  ) {
+    this.cell = this.generateJsonCell(data, tableStyles, retrieveOriginal, shading, isFlattened);
   }
 
   private removeFileExtension(filePath) {
@@ -30,7 +36,8 @@ export default class JSONTableCell {
     data: WIProperty | MultipeValuesWIProperty,
     styles,
     retrieveOriginal,
-    shading: Shading
+    shading: Shading,
+    isFlattened
   ): TableCell {
     let runs: Run[] = [];
     let attachments: Attachment[] = [];
@@ -46,6 +53,7 @@ export default class JSONTableCell {
               type: 'Picture',
               path: attachmentLink,
               name: this.removeFileExtension(runData.attachmentFileName),
+              isFlattened,
             };
             attachments.push(attachment);
           } else {
@@ -54,6 +62,7 @@ export default class JSONTableCell {
               path: runData.attachmentLink,
               name: this.removeFileExtension(runData.attachmentFileName),
               isLinkedFile: data.attachmentType === 'asLink',
+              isFlattened,
             };
             attachments.push(attachment);
           }
