@@ -19,13 +19,14 @@ export default class JSONTable {
     tableStyles: StyleOptions,
     headingLvl: number,
     retrieveOriginal = false,
-    insertPageBreak: boolean = false
+    insertPageBreak: boolean = false,
+    isFlattened = false
   ) {
     this.tableStyles = tableStyles;
     this.tableTemplate = {
       type: 'table',
       headingLevel: headingLvl,
-      Rows: this.generateJsonRows(data, headerRowStyle, this.tableStyles, retrieveOriginal),
+      Rows: this.generateJsonRows(data, headerRowStyle, this.tableStyles, retrieveOriginal, isFlattened),
       insertPageBreak: insertPageBreak,
     };
   }
@@ -34,7 +35,8 @@ export default class JSONTable {
     data: any,
     headerRowStyle: StyleOptions,
     tableStyles: StyleOptions,
-    retrieveOriginal: boolean
+    retrieveOriginal: boolean,
+    isFlattened: boolean
   ): TableRow[] {
     let rows: TableRow[] = [];
     let headersRowData: WIData = this.headersRowAdapter(data[0]);
@@ -67,7 +69,7 @@ export default class JSONTable {
     rows.push(headersRow.getRow());
 
     data.forEach((rowData: WIData) => {
-      let row = new JSONTableRow(rowData, tableStyles, retrieveOriginal);
+      let row = new JSONTableRow(rowData, tableStyles, retrieveOriginal, undefined, isFlattened);
       rows.push(row.getRow());
     });
 

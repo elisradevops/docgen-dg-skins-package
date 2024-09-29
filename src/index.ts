@@ -33,7 +33,8 @@ export default class Skins {
     styles: StyleOptions,
     headingLvl: number = 0,
     includeAttachments: boolean = true,
-    insertPageBreak?: boolean
+    insertPageBreak?: boolean,
+    isFlattened: boolean = false
   ): Promise<any> {
     try {
       let populatedSkin;
@@ -74,7 +75,8 @@ export default class Skins {
             headerStyles,
             styles,
             headingLvl,
-            includeAttachments
+            includeAttachments,
+            isFlattened
           );
           if (populatedSkin === false) {
             logger.error(`Could not generate test skin for content control :${contentControlTitle}`);
@@ -178,7 +180,10 @@ export default class Skins {
     try {
       switch (this.skinFormat) {
         case 'json':
-          if (contentControlTitle !== 'appendix-a-content-control') {
+          if (
+            contentControlTitle !== 'appendix-a-content-control' &&
+            contentControlTitle !== 'appendix-b-content-control'
+          ) {
             if (data.length > 0) {
               let tableSkin = new JSONTable(
                 data,
@@ -281,7 +286,8 @@ export default class Skins {
     headerStyles: StyleOptions,
     styles: StyleOptions,
     headingLvl: number = 0,
-    includeAttachments: boolean = true
+    includeAttachments: boolean = true,
+    isFlattened = false
   ) {
     logger.debug(`Generating testSkin as ${this.skinFormat}`);
     switch (this.skinFormat) {
@@ -410,7 +416,10 @@ export default class Skins {
                   testcase.testCaseStepsSkinData,
                   headerStyles,
                   styles,
-                  headingLvl
+                  headingLvl,
+                  undefined,
+                  undefined,
+                  isFlattened
                 );
                 let populatedTableSkin = tableSkin.getJSONTable();
                 testSkin.push(populatedTableSkin);

@@ -8,19 +8,26 @@ export default class JSONTableRow {
     data: WIData,
     tableStyles: StyleOptions,
     retrieveOriginal = false,
-    shading: Shading = undefined
+    shading: Shading = undefined,
+    isFlattened = false
   ) {
-    this.row = this.generateJsonRow(data, tableStyles, retrieveOriginal, shading);
+    this.row = this.generateJsonRow(data, tableStyles, retrieveOriginal, shading, isFlattened);
   } //constructor
 
-  generateJsonRow(data: WIData, styles: StyleOptions, retrieveOriginal: boolean, shading: Shading): TableRow {
+  generateJsonRow(
+    data: WIData,
+    styles: StyleOptions,
+    retrieveOriginal: boolean,
+    shading: Shading,
+    isFlattened
+  ): TableRow {
     let tableCells: TableCell[] = [];
 
     data.fields.forEach((wiProperty: WIProperty) => {
       if (wiProperty.name === 'id') {
         styles.Uri = data.url;
       }
-      let jsonTableCell = new JSONTableCell(wiProperty, styles, retrieveOriginal, shading);
+      let jsonTableCell = new JSONTableCell(wiProperty, styles, retrieveOriginal, shading, isFlattened);
       tableCells.push(JSON.parse(JSON.stringify(jsonTableCell.getJsonCell())));
     });
 

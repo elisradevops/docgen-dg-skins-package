@@ -53,6 +53,7 @@ export interface Attachment {
   path: string;
   name: string;
   isLinkedFile?: boolean;
+  IsFlattened?: boolean;
 }
 export interface Run {
   text: string;
