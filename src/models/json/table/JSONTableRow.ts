@@ -22,7 +22,9 @@ export default class JSONTableRow {
     isFlattened
   ): TableRow {
     let tableCells: TableCell[] = [];
-
+    if (!data.fields) {
+      throw new Error('no fields to add for the table row');
+    }
     data.fields.forEach((wiProperty: WIProperty) => {
       if (wiProperty.name === 'id') {
         styles.Uri = data.url;
