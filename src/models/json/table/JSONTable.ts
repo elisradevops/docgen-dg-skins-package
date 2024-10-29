@@ -67,7 +67,9 @@ export default class JSONTable {
 
     const headersRow = new JSONTableRow(headersRowData, finalHeaderRowStyle, undefined, headerShading);
     rows.push(headersRow.getRow());
-
+    if (!data) {
+      throw new Error('Missing table data');
+    }
     data.forEach((rowData: WIData) => {
       let row = new JSONTableRow(rowData, tableStyles, retrieveOriginal, undefined, isFlattened);
       rows.push(row.getRow());
@@ -89,7 +91,7 @@ export default class JSONTable {
       url: '',
       fields: headerValuesWi,
       Source: 999999999999,
-      level: data.level,
+      level: data?.level || 1,
     };
   } //headersRowAdapter
 
