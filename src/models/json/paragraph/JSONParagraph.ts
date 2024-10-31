@@ -1,29 +1,18 @@
-import {
-  Paragraph,
-  Run,
-  WIData,
-  WIProperty,
-  StyleOptions,
-} from "../wordJsonModels";
-import JSONRun from "../JSONRun";
+import { Paragraph, Run, WIData, WIProperty, StyleOptions } from '../wordJsonModels';
+import JSONRun from '../JSONRun';
 
 export default class JSONParagraph {
   paragraphStyles: StyleOptions;
   paragraphTemplate: Paragraph;
   wiId: number;
-  constructor(
-    field: WIProperty,
-    paragraphStyles: StyleOptions,
-    wiId: number,
-    headingLevel: number
-  ) {
+  constructor(field: WIProperty, paragraphStyles: StyleOptions, wiId: number, headingLevel: number) {
     this.paragraphStyles = paragraphStyles;
     this.wiId = wiId;
     this.paragraphTemplate = {
-      type: "paragraph",
+      type: 'paragraph',
       runs: this.generateJsonParagraphRun(field, this.paragraphStyles),
     };
-    if (headingLevel && field.name === "Title: ") {
+    if (headingLevel && field.name === 'Title: ') {
       this.paragraphTemplate.headingLevel = headingLevel;
     } else {
       this.paragraphTemplate.headingLevel = 0;
@@ -40,15 +29,15 @@ export default class JSONParagraph {
     titleStyle.InsertSpace = true;
     titleStyle.InsertLineBreak = false;
     //adds ':' to field titles
-    if (field.name !== "") {
-      field.name += ": ";
+    if (field.name !== '') {
+      field.name += ': ';
     }
     //exclude titles for fields that only show values
     if (
-      field.name !== "Title: " &&
-      field.name !== "ID: " &&
-      field.name !== "Description: " &&
-      field.name !== "text: "
+      field.name !== 'Title: ' &&
+      field.name !== 'ID: ' &&
+      field.name !== 'Description: ' &&
+      field.name !== 'text: '
     ) {
       paragraphStyles.Uri = field.url;
       jsonRun = new JSONRun(field.name, titleStyle);
@@ -57,13 +46,19 @@ export default class JSONParagraph {
       paragraphStyles.InsertLineBreak = false;
     } //end if
 
-    if (field.name === "Title: ") {
+    if (field.name === 'Title: ') {
       paragraphStyles.Uri = field.url;
       paragraphStyles.InsertLineBreak = false;
+      paragraphStyles.Size = 12;
+      paragraphStyles.isBold = true;
+      paragraphStyles.IsUnderline = true;
       jsonRun = new JSONRun(field.value, paragraphStyles);
       runs = [...runs, ...jsonRun.runs];
     } else {
       paragraphStyles.Uri = field.url;
+      paragraphStyles.Size = 11;
+      paragraphStyles.isBold = false;
+      paragraphStyles.IsUnderline = false;
       jsonRun = new JSONRun(field.value, paragraphStyles);
       runs = [...runs, ...jsonRun.runs];
     }
