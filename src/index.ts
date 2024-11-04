@@ -168,6 +168,13 @@ export default class Skins {
     }
   } //generateTable
 
+  private convertLevel = (headingLevel: number, level: number) => {
+    if (level !== -1) {
+      return level > 0 ? headingLevel + level : headingLevel ? headingLevel : 0;
+    }
+    return 0;
+  };
+
   generateStrSkin(
     data: any,
     headerStyles: StyleOptions,
@@ -218,7 +225,7 @@ export default class Skins {
                     InsertSpace: true,
                   },
                   0,
-                  skin.level ? headingLvl + skin.level : headingLvl ? headingLvl : 1 // Assuming headingLvl is defined elsewhere
+                  this.convertLevel(headingLvl, skin.level ?? -1)
                 );
                 strSkins.push(titleSkin.getJSONParagraph());
               } else if (skin.type === 'File') {
@@ -312,8 +319,8 @@ export default class Skins {
             testSuite.suiteSkinData.level
               ? headingLvl + testSuite.suiteSkinData.level
               : headingLvl
-                ? headingLvl
-                : 1
+              ? headingLvl
+              : 1
           );
           testSkin.push(testSuiteParagraphSkin.getJSONParagraph());
 
@@ -340,8 +347,8 @@ export default class Skins {
               testcase.testCaseHeaderSkinData.level
                 ? headingLvl + testcase.testCaseHeaderSkinData.level
                 : headingLvl
-                  ? headingLvl
-                  : 1
+                ? headingLvl
+                : 1
             );
             testSkin.push(testCaseParagraphSkin.getJSONParagraph());
 

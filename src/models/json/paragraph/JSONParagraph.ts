@@ -49,16 +49,10 @@ export default class JSONParagraph {
     if (field.name === 'Title: ') {
       paragraphStyles.Uri = field.url;
       paragraphStyles.InsertLineBreak = false;
-      paragraphStyles.Size = 12;
-      paragraphStyles.isBold = true;
-      paragraphStyles.IsUnderline = true;
       jsonRun = new JSONRun(field.value, paragraphStyles);
       runs = [...runs, ...jsonRun.runs];
     } else {
       paragraphStyles.Uri = field.url;
-      paragraphStyles.Size = 11;
-      paragraphStyles.isBold = false;
-      paragraphStyles.IsUnderline = false;
       jsonRun = new JSONRun(field.value, paragraphStyles);
       runs = [...runs, ...jsonRun.runs];
     }
