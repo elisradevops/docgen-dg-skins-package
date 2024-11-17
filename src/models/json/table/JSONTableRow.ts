@@ -29,7 +29,13 @@ export default class JSONTableRow {
       if (wiProperty.name === 'id') {
         styles.Uri = data.url;
       }
-      let jsonTableCell = new JSONTableCell(wiProperty, styles, retrieveOriginal, shading, isFlattened);
+      let jsonTableCell = new JSONTableCell(
+        wiProperty,
+        styles,
+        retrieveOriginal,
+        wiProperty.shading ?? shading,
+        isFlattened
+      );
       tableCells.push(JSON.parse(JSON.stringify(jsonTableCell.getJsonCell())));
     });
 

@@ -30,7 +30,7 @@ export interface TableCell {
   Paragraphs: [
     {
       Runs: Run[];
-    },
+    }
   ];
   shading?: Shading;
   width?: string;
@@ -40,7 +40,7 @@ export interface TableCell {
 export interface Shading {
   color: string;
   fill: string;
-  themeFillShade: string;
+  themeFillShade?: string;
 }
 
 export interface Paragraph {
@@ -91,6 +91,7 @@ export interface WIProperty {
   name: string;
   value: any;
   width?: string;
+  shading?: Shading;
   url?: string;
   relativeUrl?: string;
   attachmentLink?: string;
@@ -102,6 +103,7 @@ export interface MultipeValuesWIProperty {
   name: string;
   value: any[];
   width?: string;
+  shading?: Shading;
   url?: string;
   relativeUrl?: string;
   attachmentLink?: string;
