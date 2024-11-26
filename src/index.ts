@@ -9,6 +9,7 @@ import JSONFile from './models/json/file/JSONFile';
 
 export default class Skins {
   SKIN_TYPE_TABLE = 'table';
+  SKIN_TYPE_TRACE = 'trace-table';
   SKIN_TYPE_TABLE_STR = 'str-table';
   SKIN_TYPE_PARAGRAPH = 'paragraph';
   SKIN_TYPE_TEST_PLAN = 'test-plan';
@@ -42,6 +43,13 @@ export default class Skins {
       switch (skinType) {
         case this.SKIN_TYPE_TABLE:
           populatedSkin = this.generateQueryBasedTable(data, headerStyles, styles, headingLvl);
+          if (populatedSkin === false) {
+            logger.error(`Could not generate table for content control :${contentControlTitle}`);
+            return false;
+          }
+          break;
+        case this.SKIN_TYPE_TRACE:
+          populatedSkin = this.generateTraceTable(data, headerStyles, styles, headingLvl);
           if (populatedSkin === false) {
             logger.error(`Could not generate table for content control :${contentControlTitle}`);
             return false;
@@ -287,6 +295,38 @@ export default class Skins {
         return false;
     } //switch
   } //generateParagraph
+
+  generateTraceTable(data: any, headerStyles: StyleOptions, styles: StyleOptions, headingLvl: number = 0) {
+    logger.debug(`Generating table as ${this.skinFormat}`);
+    try {
+      switch (this.skinFormat) {
+        case 'json':
+          let traceSkin: any[] = [];
+          const { title, adoptedData, errorMessage } = data;
+          let traceTitle = new JSONHeaderParagraph(title.fields, styles, undefined, 2);
+          traceSkin.push(traceTitle.getJSONParagraph());
+
+          if (adoptedData !== null) {
+            let tableSkin = new JSONTable(adoptedData, headerStyles, styles, headingLvl);
+            traceSkin.push(tableSkin.getJSONTable());
+          }
+          if (errorMessage !== null) {
+            let errorSkin = new JSONParagraph({ name: 'Description', value: errorMessage }, styles, 0, 0);
+            traceSkin.push(errorSkin.getJSONParagraph());
+          }
+          return traceSkin;
+        case 'html':
+          logger.info(`Generating html table!`);
+          break;
+        default:
+          return false;
+      } //switch
+    } catch (error: any) {
+      logger.error(`Error occurred in generateTraceTable: ${error.message}`);
+      logger.error(`Error Stack: ${error.stack}`);
+      return false;
+    }
+  } //generateTraceTable
 
   generateTestBasedSkin(
     data: any,
