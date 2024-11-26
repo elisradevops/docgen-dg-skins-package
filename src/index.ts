@@ -309,8 +309,7 @@ export default class Skins {
           if (adoptedData !== null) {
             let tableSkin = new JSONTable(adoptedData, headerStyles, styles, headingLvl);
             traceSkin.push(tableSkin.getJSONTable());
-          }
-          if (errorMessage !== null) {
+          } else if (errorMessage !== null) {
             let errorSkin = new JSONParagraph({ name: 'Description', value: errorMessage }, styles, 0, 0);
             traceSkin.push(errorSkin.getJSONParagraph());
           }
