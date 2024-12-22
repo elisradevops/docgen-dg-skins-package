@@ -8,10 +8,20 @@ export default class JSONRichTextParagraph {
   paragraphStyles: StyleOptions;
   paragraphTemplate: any;
   wiId: number;
-  constructor(field: WIProperty, paragraphStyles: StyleOptions, wiId: number, headingLevel: number) {
+  constructor(
+    field: WIProperty,
+    paragraphStyles: StyleOptions,
+    wiId: number,
+    headingLevel: number,
+    skipImageFormat = false
+  ) {
     this.paragraphStyles = paragraphStyles;
     this.wiId = wiId;
-    this.paragraphTemplate = this.generateJsonRichTextParagraphs(field, this.paragraphStyles);
+    this.paragraphTemplate = this.generateJsonRichTextParagraphs(
+      field,
+      this.paragraphStyles,
+      skipImageFormat
+    );
     if (headingLevel && field.name === 'Title: ') {
       this.paragraphTemplate.headingLevel = headingLevel;
     } else {
@@ -19,7 +29,7 @@ export default class JSONRichTextParagraph {
     }
   } //constructor
 
-  generateJsonRichTextParagraphs(field: WIProperty, paragraphStyles): Run[] {
+  generateJsonRichTextParagraphs(field: WIProperty, paragraphStyles, skipImageFormat = false): Run[] {
     let titleStyle = JSON.parse(JSON.stringify(paragraphStyles));
 
     titleStyle.isBold = true;
@@ -45,10 +55,13 @@ export default class JSONRichTextParagraph {
             });
             break;
           case 'picture':
-            richTextSkin.push({
-              type: 'picture',
-              Path: content.data,
-            });
+            if (!skipImageFormat) {
+              richTextSkin.push({
+                type: 'picture',
+                Path: content.data,
+              });
+            }
+
             break;
           case 'table':
             if (content.data) {
