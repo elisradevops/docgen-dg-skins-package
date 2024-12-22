@@ -13,6 +13,7 @@ export default class Skins {
   SKIN_TYPE_TABLE_STR = 'str-table';
   SKIN_TYPE_PARAGRAPH = 'paragraph';
   SKIN_TYPE_TEST_PLAN = 'test-plan';
+  SKIN_TYPE_SYSTEM_OVERVIEW = 'system-overview';
 
   documentSkin: DocumentSkin = {
     templatePath: '',
@@ -90,6 +91,9 @@ export default class Skins {
             logger.error(`Could not generate test skin for content control :${contentControlTitle}`);
             return false;
           }
+          break;
+        case this.SKIN_TYPE_SYSTEM_OVERVIEW:
+          populatedSkin = this.generateSystemOverviewSkin(data, styles);
           break;
         default:
           logger.error(`Unknown skinType : ${skinType} - not appended to document skin`);
@@ -264,6 +268,45 @@ export default class Skins {
       return false;
     }
   } //generateTable
+
+  generateSystemOverviewSkin(systemOverviewAdaptedData: any[], styles: StyleOptions) {
+    let headerStyle = {
+      isBold: true,
+      IsItalic: false,
+      IsUnderline: false,
+      Size: 14,
+      Uri: null,
+      Font: 'Arial',
+      InsertLineBreak: false,
+      InsertSpace: true,
+    };
+    let testSkins: any[] = [];
+    for (const element of systemOverviewAdaptedData) {
+      let wiHeaderFields = [element.fields[0], element.fields[1]];
+
+      let wiSkin = new JSONHeaderParagraph(wiHeaderFields, headerStyle, element.id || 0, element.level);
+      testSkins.push(wiSkin.getJSONParagraph());
+
+      let wiDescTitleSkin = new JSONParagraph(
+        { name: 'Title', value: 'WI Description' },
+        DescriptionandProcedureStyle,
+        element.id || 0,
+        0
+      );
+      testSkins.push(wiDescTitleSkin.getJSONParagraph());
+
+      let wiDescriptionParagraph = new JSONRichTextParagraph(
+        element.fields[2],
+        styles,
+        element.id || 0,
+        0,
+        true
+      );
+      let richTextDecsSkin: any[] = wiDescriptionParagraph.getJSONRichTextParagraph();
+      testSkins.push(...richTextDecsSkin);
+    }
+    return testSkins;
+  }
 
   generateQueryBasedParagraphs(data: any, styles: StyleOptions, headingLvl: number = 0) {
     logger.debug(`Generating paragraph as ${this.skinFormat}`);
