@@ -287,6 +287,7 @@ export default class Skins {
       let wiSkin = new JSONHeaderParagraph(wiHeaderFields, headerStyle, element.id || 0, element.level);
       testSkins.push(wiSkin.getJSONParagraph());
 
+      //TODO: remove this hardcoding
       let wiDescTitleSkin = new JSONParagraph(
         { name: 'Title', value: 'WI Description' },
         DescriptionandProcedureStyle,
@@ -294,14 +295,7 @@ export default class Skins {
         0
       );
       testSkins.push(wiDescTitleSkin.getJSONParagraph());
-
-      let wiDescriptionParagraph = new JSONRichTextParagraph(
-        element.fields[2],
-        styles,
-        element.id || 0,
-        0,
-        true
-      );
+      let wiDescriptionParagraph = new JSONRichTextParagraph(element.fields[2], styles, element.id || 0, 0);
       let richTextDecsSkin: any[] = wiDescriptionParagraph.getJSONRichTextParagraph();
       testSkins.push(...richTextDecsSkin);
     }
@@ -441,9 +435,10 @@ export default class Skins {
               0
             );
             testSkin.push(testDescriptionTitleParagraph.getJSONParagraph());
+
             let testDescriptionParagraph = new JSONRichTextParagraph(
               testcase.testCaseHeaderSkinData.fields[2],
-              styles,
+              { ...styles, Size: 12, Font: 'Arial' },
               testcase.id || 0,
               0
             );
@@ -504,7 +499,7 @@ export default class Skins {
                 let tableSkin = new JSONTable(
                   testcase.testCaseStepsSkinData,
                   headerStyles,
-                  styles,
+                  { ...styles, Font: 'Arial' },
                   headingLvl,
                   undefined,
                   undefined,
@@ -535,7 +530,7 @@ export default class Skins {
                   let tableSkin = new JSONTable(
                     testcase.testCaseAttachments,
                     headerStyles,
-                    styles,
+                    { ...styles, Font: 'Arial' },
                     headingLvl,
                     true
                   );
