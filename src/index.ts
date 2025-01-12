@@ -287,14 +287,6 @@ export default class Skins {
       let wiSkin = new JSONHeaderParagraph(wiHeaderFields, headerStyle, element.id || 0, element.level);
       testSkins.push(wiSkin.getJSONParagraph());
 
-      //TODO: remove this hardcoding
-      let wiDescTitleSkin = new JSONParagraph(
-        { name: 'Title', value: 'WI Description' },
-        DescriptionandProcedureStyle,
-        element.id || 0,
-        0
-      );
-      testSkins.push(wiDescTitleSkin.getJSONParagraph());
       let wiDescriptionParagraph = new JSONRichTextParagraph(element.fields[2], styles, element.id || 0, 0);
       let richTextDecsSkin: any[] = wiDescriptionParagraph.getJSONRichTextParagraph();
       testSkins.push(...richTextDecsSkin);
