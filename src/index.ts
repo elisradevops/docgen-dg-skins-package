@@ -479,7 +479,7 @@ export default class Skins {
             }
 
             try {
-              if (testcase.testCaseStepsSkinData.length > 0) {
+              if (testcase.testCaseStepsSkinData?.length > 0) {
                 let testProcedureTitleParagraph = new JSONParagraph(
                   { name: 'Title', value: 'Test Procedure:' },
                   DescriptionandProcedureStyle,
@@ -539,7 +539,6 @@ export default class Skins {
           });
         });
         return testSkin;
-        break;
       case 'html':
         logger.info(`Generating html test data!`);
         break;
