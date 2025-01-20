@@ -1,3 +1,4 @@
+import logger from '../../../services/logger';
 import {
   Run,
   WIProperty,
@@ -47,6 +48,11 @@ export default class JSONRichTextParagraph {
    * - Default: Returns null for unrecognized node types.
    */
   private parseNode(node: RichNode): Paragraph | Table | List | Array<Paragraph | Table | List> | null {
+    if (!node || typeof node.type !== 'string') {
+      logger.warn(`Invalid node structure: ${JSON.stringify(node)}`);
+      return null;
+    }
+
     switch (node.type) {
       case 'paragraph':
         return this.parseParagraphNode(node);
@@ -101,7 +107,10 @@ export default class JSONRichTextParagraph {
    */
   private gatherRuns(children: any[]): Run[] {
     const runs: Run[] = [];
-
+    if (!Array.isArray(children)) {
+      logger.warn(`Invalid children structure: ${JSON.stringify(children)}`);
+      return runs;
+    }
     for (const child of children || []) {
       if (child.type === 'text' || child.type === 'image' || child.type === 'break') {
         runs.push(this.nodeToRun(child));
@@ -144,14 +153,12 @@ export default class JSONRichTextParagraph {
    */
   private nodeToRun(node: any): Run {
     const textStyling = {
-      Bold: node.textStyling?.Bold || this.paragraphStyles.isBold,
-      Italic: node.textStyling?.Italic || this.paragraphStyles.IsItalic,
-      Underline: node.textStyling?.Underline || this.paragraphStyles.IsUnderline,
+      ...this.paragraphStyles, // Base styles
+      ...node.textStyling, // Override with node specific styling
       Size: this.paragraphStyles.Size || 12,
       Uri: this.paragraphStyles.Uri || null,
       Font: this.paragraphStyles.Font || 'Arial',
       InsertLineBreak: this.paragraphStyles.InsertLineBreak || false,
-      InsertSpace: node.textStyling?.InsertSpace || this.paragraphStyles.InsertSpace,
     };
 
     if (node.type === 'text') {
@@ -305,6 +312,12 @@ export default class JSONRichTextParagraph {
    * @param level - The current depth level of the list (default is 0).
    */
   private parseListChildren(children: any[], list: List, level: number = 0): void {
+    if (level > 10) {
+      // Prevent infinite recursion
+      logger.warn('Maximum list nesting level reached');
+      return;
+    }
+
     for (const child of children || []) {
       if (child.type === 'other') {
         const tn = (child.tagName || '').toLowerCase();
@@ -347,17 +360,20 @@ export default class JSONRichTextParagraph {
    */
   private buildDocFromNodes(nodes: RichNode[]): Array<Paragraph | Table | List> {
     const results: Array<Paragraph | Table | List> = [];
-
     for (const node of nodes) {
-      const items = this.parseNode(node);
-      // parseNode might return a single Paragraph/Table or an array
-      if (Array.isArray(items)) {
-        results.push(...items);
-      } else if (items) {
-        results.push(items);
+      try {
+        const items = this.parseNode(node);
+        if (Array.isArray(items)) {
+          results.push(...items);
+        } else if (items) {
+          results.push(items);
+        }
+      } catch (err: any) {
+        logger.error(`Error parsing node: ${err.message}`);
+        // Continue processing other nodes
+        continue;
       }
     }
-
     return results;
   }
 } //class
