@@ -504,6 +504,8 @@ export default class Skins {
               logger.warn(
                 `For suite id : ${testSuite.suiteSkinData.fields[0].value} , the testCaseStepsSkinData is not defined for ${testcase.testCaseHeaderSkinData.fields[0].value} `
               );
+              logger.warn(`data ${JSON.stringify(testcase.testCaseStepsSkinData)}`);
+              logger.error(`Error occurred when building test steps ${error.message}}`);
             }
 
             //attachments table
