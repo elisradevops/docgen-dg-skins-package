@@ -287,7 +287,13 @@ export default class Skins {
       let wiSkin = new JSONHeaderParagraph(wiHeaderFields, headerStyle, element.id || 0, element.level);
       testSkins.push(wiSkin.getJSONParagraph());
 
-      let wiDescriptionParagraph = new JSONRichTextParagraph(element.fields[2], styles, element.id || 0, 0);
+      let wiDescriptionParagraph = new JSONRichTextParagraph(
+        element.fields[2],
+        styles,
+        element.id || 0,
+        0,
+        true
+      );
       let richTextDecsSkin: any[] = wiDescriptionParagraph.getJSONRichTextParagraph();
       testSkins.push(...richTextDecsSkin);
     }
@@ -430,7 +436,7 @@ export default class Skins {
 
             let testDescriptionParagraph = new JSONRichTextParagraph(
               testcase.testCaseHeaderSkinData.fields[2],
-              { ...styles, Size: 12, Font: 'Arial' },
+              styles,
               testcase.id || 0,
               0
             );
@@ -491,7 +497,7 @@ export default class Skins {
                 let tableSkin = new JSONTable(
                   testcase.testCaseStepsSkinData,
                   headerStyles,
-                  { ...styles, Font: 'Arial' },
+                  styles,
                   headingLvl,
                   undefined,
                   undefined,
