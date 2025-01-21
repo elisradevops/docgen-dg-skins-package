@@ -56,7 +56,8 @@ export interface Attachment {
   IsFlattened?: boolean;
 }
 
-interface TextStyle {
+export interface Run {
+  text: string;
   Bold: boolean;
   Italic: boolean;
   Underline: boolean;
@@ -65,13 +66,7 @@ interface TextStyle {
   Font: string;
   InsertLineBreak: boolean;
   InsertSpace: boolean;
-}
-
-export interface Run {
-  type: 'text' | 'image' | 'break' | 'other';
-  value?: string;
-  src?: string; // If type = 'image', you can store the URL or local path here
-  textStyling?: TextStyle; // If type = 'text', store style; if type = 'image', optional or partial
+  src?: string; //for image
 }
 export interface WorkItemData {}
 
@@ -116,7 +111,7 @@ export interface WIProperty {
   attachmentLink?: string;
   attachmentType?: string;
   relativeAttachmentLink?: string;
-  richTextNodes?: any[];
+  richText?: any[];
 }
 export interface MultipeValuesWIProperty {
   name: string;
@@ -128,49 +123,10 @@ export interface MultipeValuesWIProperty {
   attachmentLink?: string;
   attachmentType?: string;
   relativeAttachmentLink?: string;
-  richTextNodes?: any[];
+  richText?: any[];
 }
 export interface WIColumns {
   name: string;
   referenceName: string;
   url: string;
-}
-
-export type RichNode = ParagraphNode | TextNode | ImageNode | TableNode | ListNode | BreakNode | OtherNode;
-
-export interface ParagraphNode {
-  type: 'paragraph';
-  children: RichNode[];
-}
-
-export interface TextNode {
-  type: 'text';
-  value: string;
-}
-
-export interface ImageNode {
-  type: 'image';
-  src: string;
-  alt?: string;
-}
-
-export interface BreakNode {
-  type: 'break';
-}
-
-export interface TableNode {
-  type: 'table';
-  children: RichNode[];
-}
-
-export interface ListNode {
-  type: 'list';
-  isOrdered: boolean;
-  children: RichNode[];
-}
-
-export interface OtherNode {
-  type: 'other';
-  tagName: string;
-  children: RichNode[];
 }
