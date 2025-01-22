@@ -29,45 +29,49 @@ export default class JSONRun {
         if (fieldtype !== 'SuiteHeaderParagraphTitle') {
           text = `${striphtml(text.toString(), { cb: replaceBr })}` || '';
         }
-        run.text = text;
-        run.Bold = style.isBold;
-        run.Italic = style.IsItalic;
-        run.Underline = style.IsUnderline;
-        run.Size = style.Size;
+        if (run.type === 'text') {
+          run.value = text;
+          run.textStyling.Bold = style.isBold;
+          run.textStyling.Italic = style.IsItalic;
+          run.textStyling.Underline = style.IsUnderline;
+          run.textStyling.Size = style.Size;
 
-        if (run.Uri === '') {
-          run.Uri = null;
-        } else {
-          run.Uri = style.Uri;
+          if (run.textStyling.Uri === '') {
+            run.textStyling.Uri = null;
+          } else {
+            run.textStyling.Uri = style.Uri;
+          }
+          run.textStyling.Font = style.Font;
+          if (rowArray.length == 1) {
+            run.textStyling.InsertLineBreak = style.InsertLineBreak;
+          } else {
+            run.textStyling.InsertLineBreak = false;
+          }
+          if (rowArray.length - 1 == i) {
+            run.textStyling.InsertLineBreak = style.InsertLineBreak;
+          }
+          run.textStyling.InsertSpace = style.InsertSpace;
+          runs.push(JSON.parse(JSON.stringify(run)));
         }
-        run.Font = style.Font;
-        if (rowArray.length == 1) {
-          run.InsertLineBreak = style.InsertLineBreak;
-        } else {
-          run.InsertLineBreak = false;
-        }
-        if (rowArray.length - 1 == i) {
-          run.InsertLineBreak = style.InsertLineBreak;
-        }
-        run.InsertSpace = style.InsertSpace;
-        runs.push(JSON.parse(JSON.stringify(run)));
       });
     } catch (e) {
       logger.silly(`${value} - cannot be splitted`);
       runs[0] = defaultJsonRun;
-      runs[0].text = value ? `${striphtml(value.toString(), { cb: replaceBr })}` : ``;
-      runs[0].Bold = style.isBold;
-      runs[0].Italic = style.IsItalic;
-      runs[0].Underline = style.IsUnderline;
-      runs[0].Size = style.Size;
-      if (runs[0].Uri === '') {
-        runs[0].Uri = null;
-      } else {
-        runs[0].Uri = style.Uri;
+      if (defaultJsonRun.type === 'text') {
+        runs[0].value = value ? `${striphtml(value.toString(), { cb: replaceBr })}` : ``;
+        runs[0].textStyling.Bold = style.isBold;
+        runs[0].textStyling.Italic = style.IsItalic;
+        runs[0].textStyling.Underline = style.IsUnderline;
+        runs[0].textStyling.Size = style.Size;
+        if (runs[0].textStyling.Uri === '') {
+          runs[0].textStyling.Uri = null;
+        } else {
+          runs[0].textStyling.Uri = style.Uri;
+        }
+        runs[0].textStyling.Font = style.Font;
+        runs[0].textStyling.InsertLineBreak = style.InsertLineBreak;
+        runs[0].textStyling.InsertSpace = style.InsertSpace;
       }
-      runs[0].Font = style.Font;
-      runs[0].InsertLineBreak = style.InsertLineBreak;
-      runs[0].InsertSpace = style.InsertSpace;
     }
 
     return runs;
