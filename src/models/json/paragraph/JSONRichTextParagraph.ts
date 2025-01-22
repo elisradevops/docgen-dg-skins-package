@@ -1,3 +1,4 @@
+import logger from '../../../services/logger';
 import {
   Run,
   WIProperty,
@@ -22,7 +23,20 @@ export default class JSONRichTextParagraph {
     headingLevel: number,
     skipImageFormat = false
   ) {
-    this.paragraphStyles = paragraphStyles;
+    if (!field || !field.richTextNodes) {
+      throw new Error('Invalid field or missing richTextNodes');
+    }
+
+    this.paragraphStyles = paragraphStyles || {
+      isBold: false,
+      IsItalic: false,
+      IsUnderline: false,
+      Size: 12,
+      Uri: null,
+      Font: 'Arial',
+      InsertLineBreak: false,
+      InsertSpace: false,
+    };
     this.wiId = wiId;
     this.paragraphTemplate = this.buildDocFromNodes(field.richTextNodes);
   } //constructor
@@ -47,6 +61,14 @@ export default class JSONRichTextParagraph {
    * - Default: Returns null for unrecognized node types.
    */
   private parseNode(node: RichNode): Paragraph | Table | List | Array<Paragraph | Table | List> | null {
+    if (!node) return null;
+
+    // Ensure node has valid type
+    if (typeof node.type !== 'string') {
+      logger.warn(`Invalid node type encountered: ${JSON.stringify(node)}`);
+      return null;
+    }
+
     switch (node.type) {
       case 'paragraph':
         return this.parseParagraphNode(node);
@@ -81,7 +103,29 @@ export default class JSONRichTextParagraph {
    * @returns A Paragraph object containing the parsed runs.
    */
   private parseParagraphNode(node: any): Paragraph {
+    if (!node || !Array.isArray(node.children)) {
+      return { type: 'paragraph', runs: [] };
+    }
+
     const runs: Run[] = this.gatherRuns(node.children);
+    // Ensure at least one run exists
+    if (runs.length === 0) {
+      runs.push({
+        type: 'text',
+        value: '',
+        textStyling: {
+          Bold: this.paragraphStyles.isBold,
+          Italic: this.paragraphStyles.IsItalic,
+          Size: this.paragraphStyles.Size,
+          Font: this.paragraphStyles.Font,
+          Uri: this.paragraphStyles.Uri,
+          InsertLineBreak: this.paragraphStyles.InsertLineBreak,
+          InsertSpace: this.paragraphStyles.InsertSpace,
+          Underline: this.paragraphStyles.IsUnderline,
+        },
+      });
+    }
+
     return { type: 'paragraph', runs };
   }
 
@@ -100,23 +144,35 @@ export default class JSONRichTextParagraph {
    * @returns An array of `Run` objects representing the gathered runs.
    */
   private gatherRuns(children: any[]): Run[] {
+    if (!Array.isArray(children)) return [];
+
     const runs: Run[] = [];
 
-    for (const child of children || []) {
-      if (child.type === 'text' || child.type === 'image' || child.type === 'break') {
-        runs.push(this.nodeToRun(child));
-      } else if (child.type === 'paragraph') {
-        // Recursively gather runs from child paragraphs
-        runs.push(...this.gatherRuns(child.children));
-      } else if (child.type === 'table' || child.type === 'list') {
-        // Not supported in this context, so we'll just add a placeholder
-        runs.push({ type: 'other', value: `[Embedded ${child.type}]` });
-      } else if (child.type === 'other') {
-        // Recursively gather runs from inside <span> or <b>, etc.
-        // TODO: Handle b and i, u tags and more relevant tags for text styling
-        runs.push(...this.gatherRuns(child.children));
+    for (const child of children) {
+      if (!child || typeof child.type !== 'string') {
+        logger.warn('Invalid child node:', child);
+        continue;
+      }
+
+      try {
+        if (child.type === 'text' || child.type === 'image' || child.type === 'break') {
+          runs.push(this.nodeToRun(child));
+        } else if (child.type === 'paragraph') {
+          // Recursively gather runs from child paragraphs
+          runs.push(...this.gatherRuns(child.children));
+        } else if (child.type === 'table' || child.type === 'list') {
+          // Not supported in this context, so we'll just add a placeholder
+          runs.push({ type: 'other', value: `[Embedded ${child.type}]` });
+        } else if (child.type === 'other') {
+          // Recursively gather runs from inside <span> or <b>, etc.
+          runs.push(...this.gatherRuns(child.children));
+        }
+      } catch (error) {
+        logger.error('Error gathering runs:', error);
+        continue;
       }
     }
+
     return runs;
   }
 
@@ -185,7 +241,17 @@ export default class JSONRichTextParagraph {
       Rows: [],
     };
 
+    if (!node || !Array.isArray(node.children)) {
+      logger.warn('Invalid table node structure');
+      return table;
+    }
+
     this.parseTableChildren(node.children, table);
+
+    if (!this.validateTableStructure(table)) {
+      logger.warn('Inconsistent table structure detected');
+    }
+
     return table;
   }
 
@@ -346,18 +412,39 @@ export default class JSONRichTextParagraph {
    * @returns An array of Paragraph, Table, or List elements.
    */
   private buildDocFromNodes(nodes: RichNode[]): Array<Paragraph | Table | List> {
+    if (!Array.isArray(nodes)) {
+      logger.error('Invalid nodes array');
+      return [];
+    }
+
     const results: Array<Paragraph | Table | List> = [];
 
     for (const node of nodes) {
-      const items = this.parseNode(node);
-      // parseNode might return a single Paragraph/Table or an array
-      if (Array.isArray(items)) {
-        results.push(...items);
-      } else if (items) {
-        results.push(items);
+      try {
+        const items = this.parseNode(node);
+        if (Array.isArray(items)) {
+          results.push(...items.filter(Boolean));
+        } else if (items) {
+          results.push(items);
+        }
+      } catch (error) {
+        logger.error('Error processing node:', error);
+        continue;
       }
     }
 
+    // Ensure there's at least one paragraph
+    if (results.length === 0) {
+      results.push({ type: 'paragraph', runs: [] });
+    }
+
     return results;
+  }
+
+  private validateTableStructure(table: Table): boolean {
+    if (!table.Rows) return false;
+
+    const firstRowCellCount = table.Rows[0]?.Cells?.length || 0;
+    return table.Rows.every((row) => row.Cells.length === firstRowCellCount);
   }
 } //class
