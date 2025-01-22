@@ -150,7 +150,7 @@ export default class JSONRichTextParagraph {
 
     for (const child of children) {
       if (!child || typeof child.type !== 'string') {
-        logger.warn('Invalid child node:', child);
+        logger.warn(`Invalid child node: ${JSON.stringify(child)}`);
         continue;
       }
 
@@ -168,7 +168,9 @@ export default class JSONRichTextParagraph {
           runs.push(...this.gatherRuns(child.children));
         }
       } catch (error) {
-        logger.error('Error gathering runs:', error);
+        logger.error(`Error gathering runs: ${error.message}`);
+        logger.error(`Child node: ${JSON.stringify(child)}`);
+        logger.error(`Error stack: ${error.stack}`);
         continue;
       }
     }
@@ -428,7 +430,9 @@ export default class JSONRichTextParagraph {
           results.push(items);
         }
       } catch (error) {
-        logger.error('Error processing node:', error);
+        logger.error(`Error processing node: ${error.message}`);
+        logger.error(`Node: ${JSON.stringify(node)}`);
+        logger.error(`Error stack: ${error.stack}`);
         continue;
       }
     }
