@@ -34,7 +34,6 @@ export default class JSONRun {
         run.Italic = style.IsItalic;
         run.Underline = style.IsUnderline;
         run.Size = style.Size;
-
         if (run.Uri === '') {
           run.Uri = null;
         } else {
@@ -43,10 +42,9 @@ export default class JSONRun {
         run.Font = style.Font;
         if (rowArray.length == 1) {
           run.InsertLineBreak = style.InsertLineBreak;
-        } else {
-          run.InsertLineBreak = false;
-        }
-        if (rowArray.length - 1 == i) {
+        } else if (rowArray.length > 1 && i < rowArray.length - 1) {
+          run.InsertLineBreak = rowArray.length > 1;
+        } else if (rowArray.length - 1 == i) {
           run.InsertLineBreak = style.InsertLineBreak;
         }
         run.InsertSpace = style.InsertSpace;
