@@ -43,44 +43,58 @@ export default class JSONTableCell {
     let attachments: Attachment[] = [];
     let HtmlData: string = '';
     //multiple values
-    if (typeof data.value !== 'string' && typeof data.value !== 'number' && data.value) {
-      data.value.forEach((runData) => {
-        //check if photo type
-        if (runData.attachmentLink) {
-          let attachmentLink = retrieveOriginal ? runData.attachmentLink : runData.tableCellAttachmentLink;
-          if (this.isPictureUri(attachmentLink)) {
-            let attachment = {
-              type: 'Picture',
-              path: attachmentLink,
-              name: this.removeFileExtension(runData.attachmentFileName),
-              isFlattened,
-            };
-            attachments.push(attachment);
-          } else {
-            let attachment = {
-              type: 'File',
-              path: runData.attachmentLink,
-              name: this.removeFileExtension(runData.attachmentFileName),
-              isLinkedFile: data.attachmentType === 'asLink',
-              isFlattened,
-            };
-            attachments.push(attachment);
-          }
-        } else if (/<[^>]*>/.test(runData.value)) {
-          HtmlData = runData.value || '';
+    try {
+      if (typeof data.value !== 'string' && typeof data.value !== 'number' && data.value) {
+        if (!Array.isArray(data.value)) {
+          throw new Error(`Invalid data value for cell: ${JSON.stringify(data.value)}`);
         } else {
-          styles.Uri = runData.relativeUrl ? runData.relativeUrl : runData.Uri ? runData.Uri : null;
-          styles.InsertLineBreak = false;
-          let jsonRun = new JSONRun(runData.value, styles);
-          runs = [...runs, ...jsonRun.getRun()];
+          data.value.forEach((runData) => {
+            //check if photo type
+            if (runData.attachmentLink) {
+              let attachmentLink = retrieveOriginal
+                ? runData.attachmentLink
+                : runData.tableCellAttachmentLink;
+              if (this.isPictureUri(attachmentLink)) {
+                let attachment = {
+                  type: 'Picture',
+                  path: attachmentLink,
+                  name: this.removeFileExtension(runData.attachmentFileName),
+                  isFlattened,
+                };
+                attachments.push(attachment);
+              } else {
+                let attachment = {
+                  type: 'File',
+                  path: runData.attachmentLink,
+                  name: this.removeFileExtension(runData.attachmentFileName),
+                  isLinkedFile: data.attachmentType === 'asLink',
+                  isFlattened,
+                };
+                attachments.push(attachment);
+              }
+            } else if (/<[^>]*>/.test(runData.value)) {
+              HtmlData = runData.value || '';
+            } else {
+              styles.Uri = runData.relativeUrl ? runData.relativeUrl : runData.Uri ? runData.Uri : null;
+              styles.InsertLineBreak = false;
+              let jsonRun = new JSONRun(runData.value, styles);
+              runs = [...runs, ...jsonRun.getRun()];
+            }
+          });
         }
-      });
-    } else if (/<[^>]*>/.test(data.value)) {
-      HtmlData = data.value || '';
-    } else {
-      styles.Uri = data.relativeUrl ? data.relativeUrl : data.url ? data.url : null;
-      let text = data.value || '';
-      let jsonRun = new JSONRun(`${text}`, styles);
+      } else if (/<[^>]*>/.test(data.value)) {
+        HtmlData = data.value || '';
+      } else {
+        styles.Uri = data.relativeUrl ? data.relativeUrl : data.url ? data.url : null;
+        let text = data.value || '';
+        let jsonRun = new JSONRun(`${text}`, styles);
+        runs = [...runs, ...jsonRun.getRun()];
+      }
+    } catch (e) {
+      logger.error(`Error generating JSON cell: ${e.message}`);
+      logger.error(`Error data: ${JSON.stringify(data)}`);
+      logger.error(`Type Of Data: ${typeof data.value}`);
+      let jsonRun = new JSONRun('Docgen Error: Invalid data value', styles);
       runs = [...runs, ...jsonRun.getRun()];
     }
     if (HtmlData != '') {
