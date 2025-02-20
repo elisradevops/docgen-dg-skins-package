@@ -54,6 +54,7 @@ export interface Attachment {
   name: string;
   isLinkedFile?: boolean;
   IsFlattened?: boolean;
+  includeAttachmentContent?: boolean;
 }
 
 export interface Run {
@@ -110,6 +111,7 @@ export interface WIProperty {
   relativeUrl?: string;
   attachmentLink?: string;
   attachmentType?: string;
+  includeAttachmentContent?: boolean;
   relativeAttachmentLink?: string;
   richText?: any[];
 }
@@ -122,6 +124,7 @@ export interface MultipeValuesWIProperty {
   relativeUrl?: string;
   attachmentLink?: string;
   attachmentType?: string;
+  includeAttachmentContent?: boolean;
   relativeAttachmentLink?: string;
   richText?: any[];
 }

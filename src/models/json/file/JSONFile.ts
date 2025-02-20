@@ -26,6 +26,7 @@ export default class JSONFile {
         path: fileAttachmentData.attachmentLink,
         name: this.removeFileExtension(fileAttachmentData.attachmentFileName),
         isLinkedFile: fileAttachmentData.attachmentType === 'asLink',
+        includeAttachmentContent: fileAttachmentData.includeAttachmentContent,
       };
     }
   }
