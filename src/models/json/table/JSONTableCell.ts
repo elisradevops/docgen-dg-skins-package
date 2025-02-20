@@ -68,6 +68,7 @@ export default class JSONTableCell {
                   path: runData.attachmentLink,
                   name: this.removeFileExtension(runData.attachmentFileName),
                   isLinkedFile: data.attachmentType === 'asLink',
+                  includeAttachmentContent: data.includeAttachmentContent,
                   isFlattened,
                 };
                 attachments.push(attachment);
