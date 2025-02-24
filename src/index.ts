@@ -522,6 +522,17 @@ export default class Skins {
                 aggregatedErrors.push(error.message);
               }
 
+              if (
+                testcase.testCaseDocAttachmentsAdoptedData?.stepLevel &&
+                testcase.testCaseDocAttachmentsAdoptedData.stepLevel.length > 0
+              ) {
+                this.AppendAttachmentContent(
+                  testcase.testCaseDocAttachmentsAdoptedData.stepLevel,
+                  testSkin,
+                  aggregatedErrors
+                );
+              }
+
               //attachments table
               try {
                 if (testcase.testCaseAttachments) {
@@ -550,6 +561,16 @@ export default class Skins {
                 logger.error(`Error occurred when building attachments ${error.message}}`);
                 aggregatedErrors.push(error.message);
               }
+              if (
+                testcase.testCaseDocAttachmentsAdoptedData?.testCaseLevel &&
+                testcase.testCaseDocAttachmentsAdoptedData.testCaseLevel.length > 0
+              ) {
+                this.AppendAttachmentContent(
+                  testcase.testCaseDocAttachmentsAdoptedData.testCaseLevel,
+                  testSkin,
+                  aggregatedErrors
+                );
+              }
             });
           });
           return testSkin;
@@ -570,6 +591,37 @@ export default class Skins {
       throw error;
     }
   } //generateTestBasedSkin
+
+  private AppendAttachmentContent(data: any[], testSkin: any[], aggregatedErrors: string[]) {
+    try {
+      data.forEach((docAttachment) => {
+        if (docAttachment.type === 'SubHeader') {
+          const attachmentTitle = new JSONHeaderParagraph(
+            [docAttachment.field],
+            {
+              isBold: true,
+              IsItalic: false,
+              IsUnderline: true,
+              Size: 12,
+              Uri: null,
+              Font: 'Arial',
+              InsertLineBreak: false,
+              InsertSpace: true,
+            },
+            0,
+            0
+          );
+          testSkin.push(attachmentTitle.getJSONParagraph());
+        } else if (docAttachment.type === 'File') {
+          const attachment = new JSONFile(docAttachment);
+          testSkin.push(attachment.getFileAttachment);
+        }
+      });
+    } catch (error: any) {
+      logger.error(`Error occurred when building attachments ${error.message}}`);
+      aggregatedErrors.push(error.message);
+    }
+  }
 
   getDocumentSkin(): DocumentSkin {
     return this.documentSkin;
