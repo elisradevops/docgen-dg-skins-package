@@ -96,6 +96,32 @@ export interface WIQueryResults {
   queryResultType: number;
   queryType: number;
 }
+
+export interface TestSuite {
+  suiteName: string;
+  testCases: TestCase[];
+}
+
+export interface TestCase {
+  testCaseId: number;
+  testCaseName: string;
+  testSteps?: TestStep[];
+  testCaseResult: string;
+  priority?: number;
+  runBy?: string;
+  configuration?: string;
+  automationStatus?: string;
+  associatedRequirement?: string;
+}
+
+export interface TestStep {
+  stepNo: number;
+  stepAction: string;
+  stepExpected: string;
+  stepStatus: string;
+  stepComments: string;
+}
+
 export interface WIData {
   url: string;
   fields: WIProperty[];
