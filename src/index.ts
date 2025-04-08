@@ -13,6 +13,7 @@ import JSONHeaderParagraph from './models/json/paragraph/JSONTestSuiteHeaderPara
 import JSONRichTextParagraph from './models/json/paragraph/JSONRichTextParagraph';
 import { DescriptionandProcedureStyle } from './models/json/default';
 import JSONFile from './models/json/file/JSONFile';
+import TestReporterModel from './models/json/TestReporter/testReporterModel';
 
 export default class Skins {
   SKIN_TYPE_TABLE = 'table';
@@ -21,6 +22,7 @@ export default class Skins {
   SKIN_TYPE_PARAGRAPH = 'paragraph';
   SKIN_TYPE_TEST_PLAN = 'test-plan';
   SKIN_TYPE_SYSTEM_OVERVIEW = 'system-overview';
+  SKIN_TYPE_TEST_REPORTER = 'test-reporter';
 
   documentSkin: DocumentSkin = {
     templatePath: '',
@@ -82,6 +84,9 @@ export default class Skins {
           break;
         case this.SKIN_TYPE_SYSTEM_OVERVIEW:
           populatedSkin = this.generateSystemOverviewSkin(data, styles);
+          break;
+        case this.SKIN_TYPE_TEST_REPORTER:
+          populatedSkin = this.generateTestReporter(data, contentControlTitle);
           break;
         default:
           throw new Error(`Unknown skinType : ${skinType} - not appended to document skin`);
@@ -172,6 +177,11 @@ export default class Skins {
     return 0;
   };
 
+  private generateTableSkin(data, headerStyles, styles, headingLvl, insertPageBreak) {
+    let tableSkin = new JSONTable(data, headerStyles, styles, headingLvl, undefined, insertPageBreak);
+    return [tableSkin.getJSONTable()];
+  }
+
   generateStrSkin(
     data: any,
     headerStyles: StyleOptions,
@@ -189,15 +199,7 @@ export default class Skins {
             contentControlTitle !== 'appendix-b-content-control'
           ) {
             if (data.length > 0) {
-              let tableSkin = new JSONTable(
-                data,
-                headerStyles,
-                styles,
-                headingLvl,
-                undefined,
-                insertPageBreak
-              );
-              return [tableSkin.getJSONTable()];
+              return this.generateTableSkin(data, headerStyles, styles, headingLvl, insertPageBreak);
             } else {
               let emptyData = { name: 'Description', value: 'No relevant data' };
               let paragraphSkin = new JSONParagraph(emptyData, styles, 0, headingLvl);
@@ -282,6 +284,20 @@ export default class Skins {
       testSkins.push(...richTextDecsSkin);
     }
     return testSkins;
+  }
+
+  generateTestReporter(testReporterAdaptedData: any[], name: string) {
+    try {
+      if (testReporterAdaptedData.length > 0) {
+        const testReporterSkin = new TestReporterModel(testReporterAdaptedData, name);
+        return [testReporterSkin.getTestReporter()];
+      } else {
+        return [];
+      }
+    } catch (error) {
+      logger.error(`Error occurred in generateTestReporter: ${error.message}`);
+      throw error;
+    }
   }
 
   generateQueryBasedParagraphs(data: any, styles: StyleOptions, headingLvl: number = 0): any[] {
