@@ -112,6 +112,7 @@ export interface TestCase {
   configuration?: string;
   automationStatus?: string;
   associatedRequirement?: string;
+  associatedBug?: string;
 }
 
 export interface TestStep {
