@@ -22,6 +22,7 @@ export default class Skins {
   SKIN_TYPE_PARAGRAPH = 'paragraph';
   SKIN_TYPE_TEST_PLAN = 'test-plan';
   SKIN_TYPE_SYSTEM_OVERVIEW = 'system-overview';
+  SKIN_TYPE_INSTALLATION = 'installation';
   SKIN_TYPE_TEST_REPORTER = 'test-reporter';
 
   documentSkin: DocumentSkin = {
@@ -84,6 +85,9 @@ export default class Skins {
           break;
         case this.SKIN_TYPE_SYSTEM_OVERVIEW:
           populatedSkin = this.generateSystemOverviewSkin(data, styles);
+          break;
+        case this.SKIN_TYPE_INSTALLATION:
+          populatedSkin = this.generateInstallationSkin(data, styles);
           break;
         case this.SKIN_TYPE_TEST_REPORTER:
           populatedSkin = this.generateTestReporter(data, contentControlTitle);
@@ -284,6 +288,29 @@ export default class Skins {
       testSkins.push(...richTextDecsSkin);
     }
     return testSkins;
+  }
+
+  generateInstallationSkin(installationAdaptedData: any[], styles: StyleOptions) {
+    logger.debug('Generating installation instructions skin');
+
+    if (!installationAdaptedData || installationAdaptedData.length === 0) {
+      logger.warn('No installation data provided to generate skin');
+      return [];
+    }
+
+    const resultSkin = [];
+
+    for (const instruction of installationAdaptedData) {
+      if (instruction.attachment) {
+        instruction.attachment.attachmentType = 'asLink';
+        instruction.attachment.includeAttachmentContent = false;
+        const attachmentSkin = new JSONFile(instruction.attachment);
+        resultSkin.push(attachmentSkin.getFileAttachment);
+      }
+    }
+
+    logger.info(`Generated installation skin with ${resultSkin.length} elements`);
+    return resultSkin;
   }
 
   generateTestReporter(testReporterAdaptedData: any[], name: string) {
