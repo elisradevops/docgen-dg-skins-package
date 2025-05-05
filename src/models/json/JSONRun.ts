@@ -34,6 +34,7 @@ export default class JSONRun {
         run.Italic = style.IsItalic;
         run.Underline = style.IsUnderline;
         run.Size = style.Size;
+        run.InsertPageBreak = style.InsertPageBreak;
         if (run.Uri === '') {
           run.Uri = null;
         } else {

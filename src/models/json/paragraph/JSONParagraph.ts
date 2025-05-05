@@ -37,7 +37,8 @@ export default class JSONParagraph {
       field.name !== 'Title: ' &&
       field.name !== 'ID: ' &&
       field.name !== 'Description: ' &&
-      field.name !== 'text: '
+      field.name !== 'text: ' &&
+      field.name !== 'pageBreak: '
     ) {
       paragraphStyles.Uri = field.url;
       jsonRun = new JSONRun(field.name, titleStyle);
@@ -49,6 +50,10 @@ export default class JSONParagraph {
     if (field.name === 'Title: ') {
       paragraphStyles.Uri = field.url;
       paragraphStyles.InsertLineBreak = false;
+      jsonRun = new JSONRun(field.value, paragraphStyles);
+      runs = [...runs, ...jsonRun.runs];
+    } else if (field.name === 'pageBreak: ') {
+      paragraphStyles.InsertPageBreak = true;
       jsonRun = new JSONRun(field.value, paragraphStyles);
       runs = [...runs, ...jsonRun.runs];
     } else {
