@@ -7,6 +7,7 @@ export interface StyleOptions {
   Font: string;
   InsertLineBreak: boolean;
   InsertSpace: boolean;
+  InsertPageBreak?: boolean;
 }
 export interface DocumentSkin {
   templatePath: string;
@@ -67,6 +68,7 @@ export interface Run {
   Font: string;
   InsertLineBreak: boolean;
   InsertSpace: boolean;
+  InsertPageBreak?: boolean;
   src?: string; //for image
 }
 export interface WorkItemData {}
