@@ -528,6 +528,29 @@ export default class Skins {
                   }
                 }
 
+                if (testcase.testCaseLinkedMom) {
+                  if (testcase.testCaseLinkedMom.length > 0) {
+                    let testDescriptionTitleParagraph = new JSONParagraph(
+                      { name: 'Title', value: 'Linked Mom:' },
+                      DescriptionandProcedureStyle,
+                      testcase.id || 0,
+                      0
+                    );
+                    testSkin.push(testDescriptionTitleParagraph.getJSONParagraph());
+                    //create test steps table
+                    let tableSkin = new JSONTable(
+                      testcase.testCaseLinkedMom,
+                      headerStyles,
+                      styles,
+                      headingLvl
+                    );
+
+                    let populatedTableSkin = tableSkin.getJSONTable();
+
+                    testSkin.push(populatedTableSkin);
+                  }
+                }
+
                 if (testcase.testCaseBugs) {
                   if (testcase.testCaseBugs.length > 0) {
                     let testDescriptionTitleParagraph = new JSONParagraph(
