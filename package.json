@@ -1,6 +1,6 @@
 {
   "name": "@elisra-devops/docgen-skins",
-  "version": "0.16.0",
+  "version": "0.17.0",
   "description": "Can be outputed in various types:",
   "main": "./bin/index.js",
   "types": "./bin/index.d.ts",
