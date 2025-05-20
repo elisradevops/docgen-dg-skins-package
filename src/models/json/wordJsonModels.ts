@@ -110,11 +110,14 @@ export interface TestCase {
   testSteps?: TestStep[];
   testCaseResult: string;
   priority?: number;
+  assignedTo?: string;
+  subSystem?: string;
   runBy?: string;
   configuration?: string;
   automationStatus?: string;
   associatedRequirement?: string;
   associatedBug?: string;
+  associatedCR?: string;
 }
 
 export interface TestStep {
