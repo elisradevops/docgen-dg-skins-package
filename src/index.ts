@@ -181,8 +181,24 @@ export default class Skins {
     return 0;
   };
 
-  private generateTableSkin(data, headerStyles, styles, headingLvl, insertPageBreak) {
-    let tableSkin = new JSONTable(data, headerStyles, styles, headingLvl, undefined, insertPageBreak);
+  private generateTableSkin(
+    data: any,
+    headerStyles: StyleOptions,
+    styles: StyleOptions,
+    headingLvl: number,
+    insertPageBreak: boolean,
+    caption: string
+  ) {
+    let tableSkin = new JSONTable(
+      data,
+      headerStyles,
+      styles,
+      headingLvl,
+      undefined,
+      insertPageBreak,
+      false,
+      caption
+    );
     return [tableSkin.getJSONTable()];
   }
 
@@ -203,7 +219,14 @@ export default class Skins {
             contentControlTitle !== 'appendix-b-content-control'
           ) {
             if (data.length > 0) {
-              return this.generateTableSkin(data, headerStyles, styles, headingLvl, insertPageBreak);
+              return this.generateTableSkin(
+                data,
+                headerStyles,
+                styles,
+                headingLvl,
+                insertPageBreak,
+                'Results Table'
+              );
             } else {
               let emptyData = { name: 'Description', value: 'No relevant data' };
               let paragraphSkin = new JSONParagraph(emptyData, styles, 0, headingLvl);
@@ -387,7 +410,16 @@ export default class Skins {
           traceSkin.push(traceTitle.getJSONParagraph());
 
           if (adoptedData?.length > 0) {
-            let tableSkin = new JSONTable(adoptedData, headerStyles, styles, headingLvl);
+            let tableSkin = new JSONTable(
+              adoptedData,
+              headerStyles,
+              styles,
+              headingLvl,
+              undefined,
+              false,
+              false,
+              `Trace Table`
+            );
             traceSkin.push(tableSkin.getJSONTable());
           } else if (errorMessage !== null) {
             let errorSkin = new JSONParagraph({ name: 'Description', value: errorMessage }, styles, 0, 0);
@@ -434,31 +466,36 @@ export default class Skins {
                 : undefined;
 
             suites.forEach((testSuite: any) => {
-              let SuiteStyles = {
-                isBold: true,
-                IsItalic: false,
-                IsUnderline: false,
-                Size: 16,
-                Uri: null,
-                Font: 'Arial',
-                InsertLineBreak: false,
-                InsertSpace: true,
-              };
+              // Extract suiteId regardless of flattening (may be used elsewhere)
               let suiteId =
                 testSuite?.suiteSkinData?.fields && testSuite.suiteSkinData.fields.length > 1
                   ? Number(testSuite.suiteSkinData.fields[1]?.value)
                   : undefined;
-              let testSuiteParagraphSkin = new JSONHeaderParagraph(
-                testSuite.suiteSkinData.fields,
-                SuiteStyles,
-                suiteId || 0,
-                testSuite.suiteSkinData.level
-                  ? headingLvl + testSuite.suiteSkinData.level
-                  : headingLvl
-                  ? headingLvl
-                  : 1
-              );
-              testSkin.push(testSuiteParagraphSkin.getJSONParagraph());
+              
+              // Check if suite should be included (not flattened)
+              if (testSuite.suiteSkinData) {
+                let SuiteStyles = {
+                  isBold: true,
+                  IsItalic: false,
+                  IsUnderline: false,
+                  Size: 16,
+                  Uri: null,
+                  Font: 'Arial',
+                  InsertLineBreak: false,
+                  InsertSpace: true,
+                };
+                let testSuiteParagraphSkin = new JSONHeaderParagraph(
+                  testSuite.suiteSkinData.fields,
+                  SuiteStyles,
+                  suiteId || 0,
+                  testSuite.suiteSkinData.level
+                    ? headingLvl + testSuite.suiteSkinData.level
+                    : headingLvl
+                    ? headingLvl
+                    : 1
+                );
+                testSkin.push(testSuiteParagraphSkin.getJSONParagraph());
+              }
 
               testSuite.testCases.forEach((testcase) => {
                 //create testcase Header paragraph
@@ -519,7 +556,11 @@ export default class Skins {
                       testcase.testCaseRequirements,
                       headerStyles,
                       styles,
-                      headingLvl
+                      headingLvl,
+                      undefined,
+                      false,
+                      false,
+                      `Covered Requirements Table for Test Case ${testcase.testCaseHeaderSkinData?.fields[1]?.value}`
                     );
 
                     let populatedTableSkin = tableSkin.getJSONTable();
@@ -542,7 +583,11 @@ export default class Skins {
                       testcase.testCaseLinkedMom,
                       headerStyles,
                       styles,
-                      headingLvl
+                      headingLvl,
+                      undefined,
+                      false,
+                      false,
+                      `Linked MOM Table for Test Case ${testcase.testCaseHeaderSkinData?.fields[1]?.value}`
                     );
 
                     let populatedTableSkin = tableSkin.getJSONTable();
@@ -561,7 +606,16 @@ export default class Skins {
                     );
                     testSkin.push(testDescriptionTitleParagraph.getJSONParagraph());
                     //create test steps table
-                    let tableSkin = new JSONTable(testcase.testCaseBugs, headerStyles, styles, headingLvl);
+                    let tableSkin = new JSONTable(
+                      testcase.testCaseBugs,
+                      headerStyles,
+                      styles,
+                      headingLvl,
+                      undefined,
+                      false,
+                      false,
+                      `Linked Bugs Table for Test Case ${testcase.testCaseHeaderSkinData?.fields[1]?.value}`
+                    );
 
                     let populatedTableSkin = tableSkin.getJSONTable();
 
@@ -586,14 +640,15 @@ export default class Skins {
                       headingLvl,
                       undefined,
                       undefined,
-                      isFlattened
+                      isFlattened,
+                      `Test Steps Table for Test Case ${testcase.testCaseHeaderSkinData?.fields[1]?.value}`
                     );
                     let populatedTableSkin = tableSkin.getJSONTable();
                     testSkin.push(populatedTableSkin);
                   }
                 } catch (error) {
                   logger.warn(
-                    `For suite id : ${testSuite.suiteSkinData.fields[0].value} , the testCaseStepsSkinData is not defined for ${testcase.testCaseHeaderSkinData.fields[0].value} `
+                    `For suite id : ${testSuite.suiteSkinData.fields[0].value} , the testCaseStepsSkinData is not defined for ${testcase.testCaseHeaderSkinData?.fields[1]?.value} `
                   );
                   logger.warn(`data ${JSON.stringify(testcase.testCaseStepsSkinData)}`);
                   logger.error(`Error occurred when building test steps ${error.message}}`);
@@ -629,7 +684,10 @@ export default class Skins {
                         headerStyles,
                         { ...styles, Font: 'Arial' },
                         headingLvl,
-                        true
+                        undefined,
+                        false,
+                        false,
+                        `Attachments Table for Test Case ${testcase.testCaseHeaderSkinData?.fields[1]?.value}`
                       );
                       let populatedTableSkin = tableSkin.getJSONTable();
                       testSkin.push(populatedTableSkin);
