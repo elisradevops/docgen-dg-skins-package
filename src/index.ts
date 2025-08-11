@@ -434,31 +434,36 @@ export default class Skins {
                 : undefined;
 
             suites.forEach((testSuite: any) => {
-              let SuiteStyles = {
-                isBold: true,
-                IsItalic: false,
-                IsUnderline: false,
-                Size: 16,
-                Uri: null,
-                Font: 'Arial',
-                InsertLineBreak: false,
-                InsertSpace: true,
-              };
+              // Extract suiteId regardless of flattening (may be used elsewhere)
               let suiteId =
                 testSuite?.suiteSkinData?.fields && testSuite.suiteSkinData.fields.length > 1
                   ? Number(testSuite.suiteSkinData.fields[1]?.value)
                   : undefined;
-              let testSuiteParagraphSkin = new JSONHeaderParagraph(
-                testSuite.suiteSkinData.fields,
-                SuiteStyles,
-                suiteId || 0,
-                testSuite.suiteSkinData.level
-                  ? headingLvl + testSuite.suiteSkinData.level
-                  : headingLvl
-                  ? headingLvl
-                  : 1
-              );
-              testSkin.push(testSuiteParagraphSkin.getJSONParagraph());
+              
+              // Check if suite should be included (not flattened)
+              if (testSuite.suiteSkinData) {
+                let SuiteStyles = {
+                  isBold: true,
+                  IsItalic: false,
+                  IsUnderline: false,
+                  Size: 16,
+                  Uri: null,
+                  Font: 'Arial',
+                  InsertLineBreak: false,
+                  InsertSpace: true,
+                };
+                let testSuiteParagraphSkin = new JSONHeaderParagraph(
+                  testSuite.suiteSkinData.fields,
+                  SuiteStyles,
+                  suiteId || 0,
+                  testSuite.suiteSkinData.level
+                    ? headingLvl + testSuite.suiteSkinData.level
+                    : headingLvl
+                    ? headingLvl
+                    : 1
+                );
+                testSkin.push(testSuiteParagraphSkin.getJSONParagraph());
+              }
 
               testSuite.testCases.forEach((testcase) => {
                 //create testcase Header paragraph
