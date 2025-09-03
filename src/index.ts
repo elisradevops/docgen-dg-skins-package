@@ -383,8 +383,10 @@ export default class Skins {
         case 'json':
           let traceSkin: any[] = [];
           const { title, adoptedData, errorMessage } = data;
-          let traceTitle = new JSONHeaderParagraph(title.fields, styles, undefined, 2);
-          traceSkin.push(traceTitle.getJSONParagraph());
+          if (title) {
+            let traceTitle = new JSONHeaderParagraph(title.fields, styles, undefined, title.level);
+            traceSkin.push(traceTitle.getJSONParagraph());
+          }
 
           if (adoptedData?.length > 0) {
             let tableSkin = new JSONTable(adoptedData, headerStyles, styles, headingLvl);
