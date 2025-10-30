@@ -36,6 +36,7 @@ export interface TableCell {
   shading?: Shading;
   width?: string;
   Html?: JsonHtml;
+  vMerge?: 'restart' | 'continue';
 }
 
 export interface Shading {

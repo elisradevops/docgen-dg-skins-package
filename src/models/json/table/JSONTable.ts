@@ -75,8 +75,52 @@ export default class JSONTable {
       rows.push(row.getRow());
     });
 
+    // Apply vertical merging for grouped source cells (first row shows value; subsequent are empty)
+    this.applyVerticalMerges(rows);
+
     return rows;
   } //generateJsonRows
+
+  private applyVerticalMerges(rows: TableRow[]) {
+    if (!rows || rows.length <= 2) return; // header + at least 1 data row needed
+
+    const getCellText = (cell: any): string => {
+      try {
+        const runs = cell?.Paragraphs?.[0]?.Runs || [];
+        return runs.map((r: any) => (r?.text ?? '')).join('').trim();
+      } catch {
+        return '';
+      }
+    };
+
+    const dataRowStart = 1; // skip header
+    const maxCols = Math.max(...rows.map((r) => (r?.Cells?.length || 0)));
+
+    for (let col = 0; col < maxCols; col++) {
+      for (let i = dataRowStart + 1; i < rows.length; i++) {
+        const prev = rows[i - 1]?.Cells?.[col];
+        const curr = rows[i]?.Cells?.[col];
+        if (!prev || !curr) continue;
+
+        const sameFill = (prev.shading?.fill || '') === (curr.shading?.fill || '');
+        const prevTextEmpty = getCellText(prev) === '';
+        const currTextEmpty = getCellText(curr) === '';
+
+        if (!sameFill) {
+          continue;
+        }
+
+        // Start merge when prev has text and current is empty
+        if (!prevTextEmpty && currTextEmpty) {
+          prev.vMerge = prev.vMerge ?? 'restart';
+          curr.vMerge = 'continue';
+        } else if ((prev.vMerge === 'restart' || prev.vMerge === 'continue') && currTextEmpty) {
+          // Continue an existing merge block
+          curr.vMerge = 'continue';
+        }
+      }
+    }
+  }
 
   headersRowAdapter(data: WIData): WIData {
     let headerValuesWi;
