@@ -382,14 +382,23 @@ export default class Skins {
       switch (this.skinFormat) {
         case 'json':
           let traceSkin: any[] = [];
-          const { title, adoptedData, errorMessage } = data;
+          const { title, adoptedData, errorMessage, groupedHeader } = data;
           if (title) {
             let traceTitle = new JSONHeaderParagraph(title.fields, styles, undefined, title.level);
             traceSkin.push(traceTitle.getJSONParagraph());
           }
 
           if (adoptedData?.length > 0) {
-            let tableSkin = new JSONTable(adoptedData, headerStyles, styles, headingLvl);
+            let tableSkin = new JSONTable(
+              adoptedData,
+              headerStyles,
+              styles,
+              headingLvl,
+              undefined,
+              undefined,
+              false,
+              groupedHeader
+            );
             traceSkin.push(tableSkin.getJSONTable());
           } else if (errorMessage !== null) {
             let errorSkin = new JSONParagraph({ name: 'Description', value: errorMessage }, styles, 0, 0);
