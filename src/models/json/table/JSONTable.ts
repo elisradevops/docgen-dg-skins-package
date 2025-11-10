@@ -20,13 +20,29 @@ export default class JSONTable {
     headingLvl: number,
     retrieveOriginal = false,
     insertPageBreak: boolean = false,
-    isFlattened = false
+    isFlattened = false,
+    groupedHeader?: {
+      leftLabel: string;
+      rightLabel: string;
+      leftColumns?: number;
+      rightColumns?: number;
+      shading?: Shading;
+      leftShading?: Shading;
+      rightShading?: Shading;
+    }
   ) {
     this.tableStyles = tableStyles;
     this.tableTemplate = {
       type: 'table',
       headingLevel: headingLvl,
-      Rows: this.generateJsonRows(data, headerRowStyle, this.tableStyles, retrieveOriginal, isFlattened),
+      Rows: this.generateJsonRows(
+        data,
+        headerRowStyle,
+        this.tableStyles,
+        retrieveOriginal,
+        isFlattened,
+        groupedHeader
+      ),
       insertPageBreak: insertPageBreak,
     };
   }
@@ -36,7 +52,16 @@ export default class JSONTable {
     headerRowStyle: StyleOptions,
     tableStyles: StyleOptions,
     retrieveOriginal: boolean,
-    isFlattened: boolean
+    isFlattened: boolean,
+    groupedHeader?: {
+      leftLabel: string;
+      rightLabel: string;
+      leftColumns?: number;
+      rightColumns?: number;
+      shading?: Shading;
+      leftShading?: Shading;
+      rightShading?: Shading;
+    }
   ): TableRow[] {
     let rows: TableRow[] = [];
     let headersRowData: WIData = this.headersRowAdapter(data[0]);
@@ -65,6 +90,12 @@ export default class JSONTable {
             themeFillShade: 'BF',
           };
 
+    // Optional grouped header row (two merged cells)
+    const groupedRow = this.tryBuildGroupedHeaderRow(headersRowData, groupedHeader, finalHeaderRowStyle);
+    if (groupedRow) {
+      rows.push(groupedRow);
+    }
+
     const headersRow = new JSONTableRow(headersRowData, finalHeaderRowStyle, undefined, headerShading);
     rows.push(headersRow.getRow());
     if (!data) {
@@ -81,8 +112,70 @@ export default class JSONTable {
     return rows;
   } //generateJsonRows
 
+  // Builds a top grouped header row with two merged cells spanning left/right columns.
+  // Returns null if no groupedHeader is provided.
+  private tryBuildGroupedHeaderRow(
+    headersRowData: WIData,
+    groupedHeader: {
+      leftLabel: string;
+      rightLabel: string;
+      leftColumns?: number;
+      rightColumns?: number;
+      shading?: Shading;
+      leftShading?: Shading;
+      rightShading?: Shading;
+    },
+    textStyle: StyleOptions
+  ): TableRow | null {
+    try {
+      if (!groupedHeader || !groupedHeader.leftLabel || !groupedHeader.rightLabel) return null;
+
+      const totalCols = headersRowData?.fields?.length || 0;
+      if (totalCols === 0) return null;
+
+      const leftCols = Math.max(1, groupedHeader.leftColumns ?? Math.floor(totalCols / 2));
+      const rightCols = Math.max(1, groupedHeader.rightColumns ?? totalCols - leftCols);
+
+      // Build simple table cells with Runs and gridSpan
+      const makeCell = (label: string, span: number, cellShading?: Shading): any => {
+        return {
+          attachments: [],
+          Paragraphs: [
+            {
+              Runs: [
+                {
+                  text: label,
+                  Bold: !!textStyle?.isBold,
+                  Italic: !!textStyle?.IsItalic,
+                  Underline: !!textStyle?.IsUnderline,
+                  Size: textStyle?.Size ?? 12,
+                  Uri: null,
+                  Font: textStyle?.Font ?? 'Arial',
+                  InsertLineBreak: false,
+                  InsertSpace: false,
+                },
+              ],
+            },
+          ],
+          Html: undefined,
+          width: '',
+          shading: cellShading ?? groupedHeader?.shading,
+          gridSpan: span,
+        };
+      };
+
+      const leftShade = groupedHeader.leftShading ?? groupedHeader.shading;
+      const rightShade = groupedHeader.rightShading ?? groupedHeader.shading;
+      const leftCell = makeCell(groupedHeader.leftLabel, leftCols, leftShade);
+      const rightCell = makeCell(groupedHeader.rightLabel, rightCols, rightShade);
+      return { Cells: [leftCell, rightCell] } as TableRow;
+    } catch {
+      return null;
+    }
+  }
+
   private applyVerticalMerges(rows: TableRow[]) {
-    if (!rows || rows.length <= 2) return; // header + at least 1 data row needed
+    if (!rows || rows.length <= 2) return; // at least headers + one data row
 
     const getCellText = (cell: any): string => {
       try {
@@ -93,7 +186,9 @@ export default class JSONTable {
       }
     };
 
-    const dataRowStart = 1; // skip header
+    // Determine how many header rows are present at the top (1 or 2 if grouped header exists)
+    const hasGroupedHeader = Array.isArray(rows[0]?.Cells) && rows[0].Cells.some((c: any) => c?.gridSpan && c.gridSpan > 1);
+    const dataRowStart = hasGroupedHeader ? 2 : 1; // skip grouped + column header
     const maxCols = Math.max(...rows.map((r) => (r?.Cells?.length || 0)));
 
     for (let col = 0; col < maxCols; col++) {

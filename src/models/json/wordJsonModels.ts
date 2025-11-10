@@ -37,6 +37,8 @@ export interface TableCell {
   width?: string;
   Html?: JsonHtml;
   vMerge?: 'restart' | 'continue';
+  // Optional: number of grid columns this cell spans (colspan)
+  gridSpan?: number;
 }
 
 export interface Shading {
