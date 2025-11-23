@@ -20,6 +20,7 @@ export default class Skins {
   SKIN_TYPE_TRACE = 'trace-table';
   SKIN_TYPE_TABLE_STR = 'str-table';
   SKIN_TYPE_PARAGRAPH = 'paragraph';
+  SKIN_TYPE_COVER_PAGE = 'cover-page';
   SKIN_TYPE_TEST_PLAN = 'test-plan';
   SKIN_TYPE_SYSTEM_OVERVIEW = 'system-overview';
   SKIN_TYPE_INSTALLATION = 'installation';
@@ -72,6 +73,9 @@ export default class Skins {
           break;
         case this.SKIN_TYPE_PARAGRAPH:
           populatedSkin = this.generateQueryBasedParagraphs(data, styles, headingLvl);
+          break;
+        case this.SKIN_TYPE_COVER_PAGE:
+          populatedSkin = this.generateCoverPageParagraphs(data, styles, headingLvl);
           break;
         case this.SKIN_TYPE_TEST_PLAN:
           populatedSkin = this.generateTestBasedSkin(
@@ -327,49 +331,63 @@ export default class Skins {
     }
   }
 
+  private generateParagraphsFromData(data: any, styles: StyleOptions, headingLvl: number = 0): any[] {
+    const paragraphs: any[] = [];
+
+    data.forEach((wi: WIData) => {
+      wi.fields.forEach((field: WIProperty) => {
+        // Description and Test Description are handled via rich-text handler
+        if (field.name === 'Description: ' || field.name === 'Test Description:') {
+          const paragraphSkin = new JSONRichTextParagraph(field, styles, wi.Source, headingLvl + wi.level);
+          paragraphs.push(paragraphSkin.getJSONRichTextParagraph());
+        }
+
+        // Exclude ID / Description / Test Description from the normal paragraph path
+        if (field.name !== 'ID' && field.name !== 'Description: ' && field.name !== 'Test Description:') {
+          const paragraphSkin = new JSONParagraph(field, styles, wi.Source, headingLvl + wi.level);
+          paragraphs.push(paragraphSkin.getJSONParagraph());
+        }
+      });
+    });
+
+    return paragraphs;
+  }
+
+  generateCoverPageParagraphs(data: any, styles: StyleOptions, headingLvl: number = 0): any[] {
+    logger.debug(`Generating cover-page paragraphs as ${this.skinFormat}`);
+    try {
+      switch (this.skinFormat) {
+        case 'json':
+          return this.generateParagraphsFromData(data, styles, headingLvl);
+        case 'html':
+          logger.info(`Generating html cover-page paragraphs!`);
+          return [];
+        default:
+          throw new Error(`Invalid skin format ${this.skinFormat}`);
+      }
+    } catch (error: any) {
+      logger.error(`Error occurred in generateCoverPageParagraphs: ${error.message}`);
+      throw error;
+    }
+  }
+
   generateQueryBasedParagraphs(data: any, styles: StyleOptions, headingLvl: number = 0): any[] {
     logger.debug(`Generating paragraph as ${this.skinFormat}`);
     try {
       switch (this.skinFormat) {
         case 'json':
-          let paragraphs: any[] = [];
-          data.forEach((wi: WIData) => {
-            wi.fields.forEach((field: WIProperty) => {
-              //Description and Test Description are handled in richText handler
-              if (field.name === 'Description: ' || field.name === 'Test Description:') {
-                let paragraphSkin = new JSONRichTextParagraph(
-                  field,
-                  styles,
-                  wi.Source,
-                  headingLvl + wi.level
-                );
-                paragraphs.push(paragraphSkin.getJSONRichTextParagraph());
-              }
-
-              //making sure ID is not printed
-              //excluding Description and Test Description are handled in richText handler
-              if (
-                field.name !== 'ID' &&
-                field.name !== 'Description: ' &&
-                field.name !== 'Test Description:'
-              ) {
-                let paragraphSkin = new JSONParagraph(field, styles, wi.Source, headingLvl + wi.level);
-                paragraphs.push(paragraphSkin.getJSONParagraph());
-              }
-            });
-          });
-          return paragraphs;
+          return this.generateParagraphsFromData(data, styles, headingLvl);
         case 'html':
           logger.info(`Generating html paragraphs!`);
           return [];
         default:
           throw new Error(`Invalid skin format ${this.skinFormat}`);
-      } //switch
-    } catch (error) {
+      }
+    } catch (error: any) {
       logger.error(`Error occurred in generateQueryBasedParagraphs: ${error.message}`);
       throw error;
     }
-  } //generateParagraph
+  }
 
   generateTraceTable(
     data: any,
@@ -450,7 +468,7 @@ export default class Skins {
                 testSuite?.suiteSkinData?.fields && testSuite.suiteSkinData.fields.length > 1
                   ? Number(testSuite.suiteSkinData.fields[1]?.value)
                   : undefined;
-              
+
               // Check if suite should be included (not flattened)
               if (testSuite.suiteSkinData) {
                 let SuiteStyles = {
