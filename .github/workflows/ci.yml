@@ -1,4 +1,4 @@
-name: "🚀 ci"
+name: '🚀 ci'
 
 on:
   pull_request:
@@ -6,18 +6,27 @@ on:
       - main
     paths-ignore:
       - '.github/**'
-      
+
 jobs:
   build_and_test:
-    name: 🚀 build  and test
+    name: '🚀 build  and test'
     runs-on: ubuntu-latest
     steps:
       - name: 📚 checkout
-        uses: actions/checkout@v2
+        uses: actions/checkout@v4
       - name: 🟢 node
-        uses: actions/setup-node@v2
+        uses: actions/setup-node@v4
         with:
-          node-version: 14
-          registry-url: https://registry.npmjs.org
-      - run: npm install
-      - run: npm run build
+          node-version: 20
+          cache: 'npm'
+      - name: 📦 install deps
+        run: npm ci
+      - name: 🧪 run tests (with coverage)
+        run: npm test
+      - name: ⬆️ upload coverage artifact
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: jest-coverage
+          path: coverage
+          if-no-files-found: ignore
