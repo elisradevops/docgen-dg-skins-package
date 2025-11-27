@@ -1,4 +1,4 @@
-name: '🚀 CI'
+name: '🚀 ci'
 
 on:
   pull_request:
@@ -8,8 +8,8 @@ on:
       - '.github/**'
 
 jobs:
-  test:
-    name: 🧪 tests
+  build_and_test:
+    name: '🚀 build  and test'
     runs-on: ubuntu-latest
     steps:
       - name: 📚 checkout
