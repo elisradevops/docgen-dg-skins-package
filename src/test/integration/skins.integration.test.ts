@@ -383,6 +383,159 @@ describe('Generate json skins from testData - tests', () => {
     );
     expect(hasPageBreak).toBe(true);
   });
+  test('generate test-std skin alias', async () => {
+    let skins = new Skins('json', 'c\\test\\test.dotx');
+    const result = await skins.addNewContentToDocumentSkin(
+      'system-capabilities',
+      skins.SKIN_TYPE_TEST_STD,
+      simpleTestSuites as any,
+      headerStyles,
+      styles,
+      4
+    );
+
+    expect(Array.isArray(result)).toBe(true);
+    expect(result.length).toBeGreaterThan(0);
+  });
+  test('generate test-stp skin alias', async () => {
+    let skins = new Skins('json', 'c\\test\\test.dotx');
+    const stpSuitesWithPhase = [
+      {
+        suiteSkinData: {
+          fields: [
+            { name: 'Title', value: 'Suite 1' },
+            { name: 'ID', value: 1 },
+          ],
+          level: 1,
+        },
+        testCases: [
+          {
+            id: 101,
+            testCaseHeaderSkinData: {
+              fields: [
+                { name: 'Title', value: 'TC-1' },
+                { name: 'ID', value: 101 },
+                { name: 'Description: ', value: '<p>Simple description</p>' },
+                { name: 'Test Phase', value: 'Qualification' },
+              ],
+              level: 1,
+            },
+            testCaseRequirements: [],
+            testCaseLinkedMom: [],
+            testCaseBugs: [],
+            testCaseStepsSkinData: [],
+            testCaseAttachments: [],
+          },
+        ],
+      },
+    ];
+    const result = await skins.addNewContentToDocumentSkin(
+      'system-capabilities',
+      skins.SKIN_TYPE_TEST_STP,
+      stpSuitesWithPhase as any,
+      headerStyles,
+      styles,
+      4
+    );
+
+    expect(Array.isArray(result)).toBe(true);
+    expect(result.length).toBeGreaterThan(0);
+    const hasPhaseParagraph = result.some((paragraph: any) => {
+      if (paragraph?.type !== 'paragraph' || !Array.isArray(paragraph?.runs)) return false;
+      const text = paragraph.runs.map((run: any) => run?.text || '').join('');
+      return text.includes('Test Phase: Qualification');
+    });
+    expect(hasPhaseParagraph).toBe(true);
+  });
+  test('generate test-stp skin alias with +1 heading depth vs std', async () => {
+    let skins = new Skins('json', 'c\\test\\test.dotx');
+    const suites = [
+      {
+        suiteSkinData: {
+          fields: [
+            { name: 'Title', value: 'Suite H' },
+            { name: 'ID', value: 11 },
+          ],
+          level: 1,
+        },
+        testCases: [
+          {
+            id: 111,
+            testCaseHeaderSkinData: {
+              fields: [
+                { name: 'Title', value: 'TC-H' },
+                { name: 'ID', value: 111 },
+                { name: 'Description: ', value: '<p>Simple description</p>' },
+              ],
+              level: 2,
+            },
+            testCaseRequirements: [],
+            testCaseLinkedMom: [],
+            testCaseBugs: [],
+            testCaseStepsSkinData: [],
+            testCaseAttachments: [],
+          },
+        ],
+      },
+    ];
+
+    const stdResult = await skins.addNewContentToDocumentSkin(
+      'system-capabilities',
+      skins.SKIN_TYPE_TEST_STD,
+      suites as any,
+      headerStyles,
+      styles,
+      4
+    );
+    const stpResult = await skins.addNewContentToDocumentSkin(
+      'system-capabilities',
+      skins.SKIN_TYPE_TEST_STP,
+      suites as any,
+      headerStyles,
+      styles,
+      4
+    );
+
+    const getHeadingLevelByText = (items: any[], text: string) => {
+      const paragraph = items.find((item) => {
+        if (item?.type !== 'paragraph' || !Array.isArray(item?.runs)) return false;
+        const runText = item.runs.map((run: any) => String(run?.text || '')).join('');
+        return runText.includes(text) && Number.isInteger(item?.headingLevel) && item.headingLevel > 0;
+      });
+      return paragraph?.headingLevel;
+    };
+
+    const stdSuiteHeading = getHeadingLevelByText(stdResult as any[], 'Suite H');
+    const stpSuiteHeading = getHeadingLevelByText(stpResult as any[], 'Suite H');
+    const stdCaseHeading = getHeadingLevelByText(stdResult as any[], 'TC-H');
+    const stpCaseHeading = getHeadingLevelByText(stpResult as any[], 'TC-H');
+
+    expect(stpSuiteHeading).toBe(stdSuiteHeading + 1);
+    expect(stpCaseHeading).toBe(stdCaseHeading + 1);
+  });
+  test('generate test-str skin alias', async () => {
+    let skins = new Skins('json', 'c\\test\\test.dotx');
+    const result = await skins.addNewContentToDocumentSkin(
+      'appendix-a-content-control',
+      skins.SKIN_TYPE_TEST_STR,
+      [
+        {
+          type: 'Header',
+          field: { name: 'Title', value: 'Section A' },
+          level: 1,
+        },
+        {
+          field: { name: 'Description', value: 'Row 1' },
+        },
+      ] as any,
+      headerStyles,
+      styles,
+      4
+    );
+
+    expect(Array.isArray(result)).toBe(true);
+    expect(result.length).toBeGreaterThan(0);
+  });
   test('generate trace table skin', async () => {
     let skins = new Skins('json', 'c\\test\\test.dotx');
     const traceData = {

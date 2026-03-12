@@ -22,6 +22,9 @@ export default class Skins {
   SKIN_TYPE_PARAGRAPH = 'paragraph';
   SKIN_TYPE_COVER_PAGE = 'cover-page';
   SKIN_TYPE_TEST_PLAN = 'test-plan';
+  SKIN_TYPE_TEST_STD = 'test-std';
+  SKIN_TYPE_TEST_STP = 'test-stp';
+  SKIN_TYPE_TEST_STR = 'test-str';
   SKIN_TYPE_SYSTEM_OVERVIEW = 'system-overview';
   SKIN_TYPE_INSTALLATION = 'installation';
   SKIN_TYPE_TEST_REPORTER = 'test-reporter';
@@ -38,6 +41,16 @@ export default class Skins {
     this.skinFormat = skinFormat;
   }
 
+  private resolveSkinTypeAlias(skinType: string) {
+    if (skinType === this.SKIN_TYPE_TEST_STD || skinType === this.SKIN_TYPE_TEST_STP) {
+      return this.SKIN_TYPE_TEST_PLAN;
+    }
+    if (skinType === this.SKIN_TYPE_TEST_STR) {
+      return this.SKIN_TYPE_TABLE_STR;
+    }
+    return skinType;
+  }
+
   async addNewContentToDocumentSkin(
     contentControlTitle: string,
     skinType: string,
@@ -51,8 +64,10 @@ export default class Skins {
   ): Promise<any[]> {
     try {
       let populatedSkin: any[] = [];
+      const isStpTestSkin = skinType === this.SKIN_TYPE_TEST_STP;
+      const normalizedSkinType = this.resolveSkinTypeAlias(skinType);
 
-      switch (skinType) {
+      switch (normalizedSkinType) {
         case this.SKIN_TYPE_TABLE:
           populatedSkin = this.generateQueryBasedTable(data, headerStyles, styles, headingLvl);
 
@@ -84,7 +99,8 @@ export default class Skins {
             styles,
             headingLvl,
             includeAttachments,
-            isFlattened
+            isFlattened,
+            isStpTestSkin ? 1 : 0
           );
           break;
         case this.SKIN_TYPE_SYSTEM_OVERVIEW:
@@ -415,7 +431,8 @@ export default class Skins {
               undefined,
               undefined,
               false,
-              groupedHeader
+              groupedHeader,
+              true
             );
             traceSkin.push(tableSkin.getJSONTable());
           } else if (errorMessage !== null) {
@@ -441,7 +458,8 @@ export default class Skins {
     styles: StyleOptions,
     headingLvl: number = 0,
     includeAttachments: boolean = true,
-    isFlattened = false
+    isFlattened = false,
+    headingLevelOffset = 0
   ): any[] {
     logger.debug(`Generating testSkin as ${this.skinFormat}`);
     let aggregatedErrors: string[] = [];
@@ -486,10 +504,10 @@ export default class Skins {
                   SuiteStyles,
                   suiteId || 0,
                   testSuite.suiteSkinData.level
-                    ? headingLvl + testSuite.suiteSkinData.level
+                    ? headingLvl + testSuite.suiteSkinData.level + headingLevelOffset
                     : headingLvl
-                    ? headingLvl
-                    : 1
+                    ? headingLvl + headingLevelOffset
+                    : 1 + headingLevelOffset
                 );
                 testSkin.push(testSuiteParagraphSkin.getJSONParagraph());
               }
@@ -515,10 +533,10 @@ export default class Skins {
                   TestCaseStyles,
                   testcase.id || 0,
                   testcase.testCaseHeaderSkinData.level
-                    ? headingLvl + testcase.testCaseHeaderSkinData.level
+                    ? headingLvl + testcase.testCaseHeaderSkinData.level + headingLevelOffset
                     : headingLvl
-                    ? headingLvl
-                    : 1
+                    ? headingLvl + headingLevelOffset
+                    : 1 + headingLevelOffset
                 );
                 testSkin.push(testCaseParagraphSkin.getJSONParagraph());
 
@@ -538,6 +556,23 @@ export default class Skins {
                 );
                 let richTextSkin: any[] = testDescriptionParagraph.getJSONRichTextParagraph();
                 testSkin = [...testSkin, ...richTextSkin];
+
+                const additionalTestCaseFields = Array.isArray(testcase.testCaseHeaderSkinData?.fields)
+                  ? testcase.testCaseHeaderSkinData.fields.slice(3)
+                  : [];
+                additionalTestCaseFields.forEach((field: any) => {
+                  const name = String(field?.name || '').trim();
+                  const value = String(field?.value ?? '').trim();
+                  if (!value) return;
+                  const combinedValue = name ? `${name}: ${value}` : value;
+                  const paragraph = new JSONParagraph(
+                    { name: '', value: combinedValue },
+                    styles,
+                    testcase.id || 0,
+                    0
+                  );
+                  testSkin.push(paragraph.getJSONParagraph());
+                });
 
                 if (testcase.testCaseRequirements) {
                   if (testcase.testCaseRequirements.length > 0) {
