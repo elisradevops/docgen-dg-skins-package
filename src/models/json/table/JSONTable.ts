@@ -12,6 +12,7 @@ import JSONTableRow from './JSONTableRow';
 export default class JSONTable {
   tableTemplate: Table;
   tableStyles: StyleOptions;
+  private readonly enableVerticalMerge: boolean;
 
   constructor(
     data: WIQueryResults,
@@ -29,8 +30,10 @@ export default class JSONTable {
       shading?: Shading;
       leftShading?: Shading;
       rightShading?: Shading;
-    }
+    },
+    enableVerticalMerge: boolean = false
   ) {
+    this.enableVerticalMerge = enableVerticalMerge;
     this.tableStyles = tableStyles;
     this.tableTemplate = {
       type: 'table',
@@ -106,8 +109,10 @@ export default class JSONTable {
       rows.push(row.getRow());
     });
 
-    // Apply vertical merging for grouped source cells (first row shows value; subsequent are empty)
-    this.applyVerticalMerges(rows);
+    if (this.enableVerticalMerge) {
+      // Apply vertical merging for grouped source cells (first row shows value; subsequent are empty)
+      this.applyVerticalMerges(rows);
+    }
 
     return rows;
   } //generateJsonRows
@@ -179,6 +184,17 @@ export default class JSONTable {
 
     const getCellText = (cell: any): string => {
       try {
+        const htmlRaw = String(cell?.Html?.Html || '').trim();
+        if (htmlRaw) {
+          const htmlText = htmlRaw
+            .replace(/<[^>]*>/g, ' ')
+            .replace(/&nbsp;/gi, ' ')
+            .replace(/\s+/g, ' ')
+            .trim();
+          if (htmlText) {
+            return htmlText;
+          }
+        }
         const runs = cell?.Paragraphs?.[0]?.Runs || [];
         return runs.map((r: any) => (r?.text ?? '')).join('').trim();
       } catch {
