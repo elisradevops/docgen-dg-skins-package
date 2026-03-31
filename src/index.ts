@@ -28,6 +28,7 @@ export default class Skins {
   SKIN_TYPE_SYSTEM_OVERVIEW = 'system-overview';
   SKIN_TYPE_INSTALLATION = 'installation';
   SKIN_TYPE_TEST_REPORTER = 'test-reporter';
+  SKIN_TYPE_TIME_MACHINE = 'time-machine-report';
 
   documentSkin: DocumentSkin = {
     templatePath: '',
@@ -111,6 +112,9 @@ export default class Skins {
           break;
         case this.SKIN_TYPE_TEST_REPORTER:
           populatedSkin = this.generateTestReporter(data, contentControlTitle);
+          break;
+        case this.SKIN_TYPE_TIME_MACHINE:
+          populatedSkin = this.generateTimeMachineReport(data, headerStyles, styles, headingLvl);
           break;
         default:
           throw new Error(`Unknown skinType : ${skinType} - not appended to document skin`);
@@ -792,6 +796,204 @@ export default class Skins {
       logger.error(`Error occurred when building attachments ${error.message}}`);
       aggregatedErrors.push(error.message);
     }
+  }
+
+  private formatTimeMachineDate(value: any): string {
+    if (!value) return '';
+    const parsed = new Date(value);
+    if (Number.isNaN(parsed.getTime())) return String(value);
+    const month = parsed.toLocaleString('en-US', { month: 'long' });
+    const day = String(parsed.getDate()).padStart(2, '0');
+    const year = parsed.getFullYear();
+    const hours = String(parsed.getHours()).padStart(2, '0');
+    const minutes = String(parsed.getMinutes()).padStart(2, '0');
+    return `${month} ${day}, ${year} ${hours}:${minutes}`;
+  }
+
+  private asText(value: any): string {
+    if (value === null || value === undefined) return '';
+    if (typeof value === 'string') return value;
+    if (typeof value === 'number' || typeof value === 'boolean') return String(value);
+    if (typeof value === 'object') {
+      try {
+        return JSON.stringify(value);
+      } catch {
+        return String(value);
+      }
+    }
+    return String(value);
+  }
+
+  private createParagraphWordObject(value: string, style: StyleOptions, headingLevel = 0) {
+    const paragraph = new JSONParagraph({ name: 'Title', value }, { ...style }, 0, headingLevel);
+    return paragraph.getJSONParagraph();
+  }
+
+  private createTextParagraphWordObject(value: string, style: StyleOptions) {
+    const paragraph = new JSONParagraph({ name: '', value }, { ...style }, 0, 0);
+    return paragraph.getJSONParagraph();
+  }
+
+  private createTableWordObject(rows: any[], headerStyles: StyleOptions, styles: StyleOptions) {
+    if (!Array.isArray(rows) || rows.length === 0) return null;
+    const table = new JSONTable(rows as any, { ...headerStyles }, { ...styles }, 0);
+    return table.getJSONTable();
+  }
+
+  generateTimeMachineReport(
+    data: any,
+    headerStyles: StyleOptions,
+    styles: StyleOptions,
+    headingLvl: number = 1
+  ): any[] {
+    const reportData = data?.compareResult ? data.compareResult : data || {};
+    const queryName = this.asText(data?.queryName || reportData?.queryName || '');
+    const teamProjectName = this.asText(data?.teamProjectName || reportData?.teamProjectName || '');
+    const baselineAsOf = reportData?.baseline?.asOf || '';
+    const compareToAsOf = reportData?.compareTo?.asOf || '';
+    const baselineTotal = Number(reportData?.baseline?.total || 0);
+    const compareToTotal = Number(reportData?.compareTo?.total || 0);
+    const summary = reportData?.summary || {};
+    const updatedCount = Number(summary?.updatedCount || 0);
+    const rows = Array.isArray(reportData?.rows) ? reportData.rows : [];
+    const changedRows = rows.filter((row) => String(row?.compareStatus || '').toLowerCase() === 'changed');
+
+    const titleStyles: StyleOptions = {
+      ...styles,
+      isBold: true,
+      InsertLineBreak: false,
+      InsertSpace: false,
+    };
+    const normalStyles: StyleOptions = {
+      ...styles,
+      isBold: false,
+      InsertLineBreak: false,
+      InsertSpace: false,
+    };
+    const tableHeaderStyles: StyleOptions = {
+      ...headerStyles,
+      isBold: true,
+      InsertLineBreak: false,
+      InsertSpace: false,
+    };
+
+    const reportWordObjects: any[] = [];
+    reportWordObjects.push(this.createParagraphWordObject('Difference', titleStyles, Math.max(1, headingLvl)));
+    reportWordObjects.push(
+      this.createTextParagraphWordObject(`Project: ${teamProjectName || 'N/A'}`, normalStyles),
+    );
+    if (queryName) {
+      reportWordObjects.push(this.createTextParagraphWordObject(`Query: ${queryName}`, normalStyles));
+    }
+
+    const compareSummaryTableRows = [
+      {
+        url: '',
+        fields: [
+          { name: 'Point', value: 'Baseline', width: '20%' },
+          { name: 'Time', value: this.formatTimeMachineDate(baselineAsOf), width: '50%' },
+          { name: '# Sum of Work-Items', value: String(baselineTotal), width: '30%' },
+        ],
+        Source: 0,
+        level: 0,
+      },
+      {
+        url: '',
+        fields: [
+          { name: 'Point', value: 'Compare to', width: '20%' },
+          { name: 'Time', value: this.formatTimeMachineDate(compareToAsOf), width: '50%' },
+          { name: '# Sum of Work-Items', value: String(compareToTotal), width: '30%' },
+        ],
+        Source: 0,
+        level: 0,
+      },
+    ];
+    const compareSummaryTable = this.createTableWordObject(compareSummaryTableRows, tableHeaderStyles, normalStyles);
+    if (compareSummaryTable) {
+      reportWordObjects.push(compareSummaryTable);
+    }
+
+    reportWordObjects.push(this.createParagraphWordObject('Summarize', titleStyles, Math.max(1, headingLvl + 2)));
+    reportWordObjects.push(
+      this.createTextParagraphWordObject(`# Sum of Work-Items updated: ${updatedCount}`, normalStyles),
+    );
+
+    if (rows.length > 0) {
+      const compareRows = rows.map((row) => ({
+        url: row?.workItemUrl || '',
+        fields: [
+          { name: 'ID', value: this.asText(row?.id), url: row?.workItemUrl || '', width: '9%' },
+          { name: 'Work Item Type', value: this.asText(row?.workItemType), width: '14%' },
+          { name: 'Title', value: this.asText(row?.title), width: '34%' },
+          { name: 'Id Revision of Baseline', value: this.asText(row?.baselineRevisionId), width: '14%' },
+          { name: 'Id Revision of CompareTo', value: this.asText(row?.compareToRevisionId), width: '14%' },
+          { name: 'Compare Status', value: this.asText(row?.compareStatus), width: '15%' },
+        ],
+        Source: Number(row?.id || 0),
+        level: 0,
+      }));
+      const compareTable = this.createTableWordObject(compareRows, tableHeaderStyles, normalStyles);
+      if (compareTable) {
+        reportWordObjects.push(compareTable);
+      }
+    } else {
+      reportWordObjects.push(this.createTextParagraphWordObject('No work-items were returned.', normalStyles));
+    }
+
+    reportWordObjects.push(
+      this.createParagraphWordObject('2. Work Item Differences', titleStyles, Math.max(1, headingLvl + 2)),
+    );
+    if (changedRows.length === 0) {
+      reportWordObjects.push(
+        this.createTextParagraphWordObject(
+          'No work-items were marked as Changed between the selected date-times.',
+          normalStyles,
+        ),
+      );
+      return reportWordObjects;
+    }
+
+    changedRows.forEach((row) => {
+      const baselineRevision = this.asText(row?.baselineRevisionId || '');
+      const compareRevision = this.asText(row?.compareToRevisionId || '');
+      const differences = Array.isArray(row?.differences) ? row.differences : [];
+      const itemTitle = `${this.asText(row?.workItemType)} ${this.asText(row?.id)} Changed between version ${baselineRevision} and ${compareRevision}`;
+      reportWordObjects.push(
+        this.createParagraphWordObject(itemTitle.trim(), titleStyles, Math.max(1, headingLvl + 3)),
+      );
+      if (differences.length === 0) {
+        reportWordObjects.push(this.createTextParagraphWordObject('No field differences found.', normalStyles));
+        return;
+      }
+
+      differences.forEach((diff) => {
+        reportWordObjects.push(
+          this.createTextParagraphWordObject(`${this.asText(diff?.field)}:`, {
+            ...normalStyles,
+            isBold: true,
+          }),
+        );
+        const baselineValue = [baselineRevision, this.asText(diff?.baseline)].filter(Boolean).join(' ');
+        const compareValue = [compareRevision, this.asText(diff?.compareTo)].filter(Boolean).join(' ');
+        const diffTableRows = [
+          {
+            url: '',
+            fields: [
+              { name: 'Baseline', value: baselineValue, width: '50%' },
+              { name: 'Compare to', value: compareValue, width: '50%' },
+            ],
+            Source: Number(row?.id || 0),
+            level: 0,
+          },
+        ];
+        const diffTable = this.createTableWordObject(diffTableRows, tableHeaderStyles, normalStyles);
+        if (diffTable) {
+          reportWordObjects.push(diffTable);
+        }
+      });
+    });
+
+    return reportWordObjects;
   }
 
   getDocumentSkin(): DocumentSkin {

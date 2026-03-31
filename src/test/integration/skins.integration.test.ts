@@ -606,3 +606,55 @@ describe('Common functions - tests', () => {
     expect(hasHtml).toBe(true);
   });
 });
+
+describe('Time machine report skin - tests', () => {
+  test('generate time-machine-report skin with compare summary and differences', async () => {
+    const skins = new Skins('json', 'c\\test\\test.dotx');
+    const result = await skins.addNewContentToDocumentSkin(
+      'historical-compare-report-content-control',
+      skins.SKIN_TYPE_TIME_MACHINE,
+      {
+        teamProjectName: 'MEWP',
+        queryName: 'Shared Query',
+        compareResult: {
+          baseline: { asOf: '2025-12-22T17:08:00.000Z', total: 4 },
+          compareTo: { asOf: '2025-12-28T08:57:00.000Z', total: 4 },
+          summary: { updatedCount: 1 },
+          rows: [
+            {
+              id: 11,
+              workItemType: 'Requirement',
+              title: 'Req-11',
+              workItemUrl: 'https://dev.azure.com/org/project/_workitems/edit/11',
+              baselineRevisionId: 2,
+              compareToRevisionId: 20,
+              compareStatus: 'Changed',
+              differences: [{ field: 'Test Phase', baseline: 'FAT', compareTo: 'FAT; ATP' }],
+            },
+          ],
+        },
+      },
+      headerStyles,
+      styles,
+      1,
+    );
+
+    expect(Array.isArray(result)).toBe(true);
+    expect(result.length).toBeGreaterThan(0);
+    expect(result.some((item: any) => item.type === 'table')).toBe(true);
+    expect(
+      result.some((item: any) => {
+        if (item?.type !== 'paragraph') return false;
+        const text = (item?.runs || []).map((run: any) => run?.text || '').join('');
+        return text.includes('Difference');
+      }),
+    ).toBe(true);
+    expect(
+      result.some((item: any) => {
+        if (item?.type !== 'paragraph') return false;
+        const text = (item?.runs || []).map((run: any) => run?.text || '').join('');
+        return text.includes('Work Item Differences');
+      }),
+    ).toBe(true);
+  });
+});
