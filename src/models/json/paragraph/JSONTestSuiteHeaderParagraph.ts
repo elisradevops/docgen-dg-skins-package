@@ -30,6 +30,10 @@ export default class JSONTestSuiteHeaderParagraph {
     } else {
       this.paragraphTemplate.headingLevel = 0;
     }
+
+    if (this.wiId) {
+      this.paragraphTemplate.bookmarkName = `_WI${this.wiId}`;
+    }
   } //constructor
 
   generateJsonParagraphHeaderRuns(fields, paragraphStyles) {

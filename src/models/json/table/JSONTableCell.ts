@@ -87,6 +87,7 @@ export default class JSONTableCell {
         HtmlData = data.value || '';
       } else {
         styles.Uri = data.relativeUrl ? data.relativeUrl : data.url ? data.url : null;
+        styles.SectionRefId = data.sectionRefId ?? null;
         let text = data.value || '';
         let jsonRun = new JSONRun(`${text}`, styles);
         runs = [...runs, ...jsonRun.getRun()];

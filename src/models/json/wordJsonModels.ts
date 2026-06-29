@@ -8,6 +8,7 @@ export interface StyleOptions {
   InsertLineBreak: boolean;
   InsertSpace: boolean;
   InsertPageBreak?: boolean;
+  SectionRefId?: string;
 }
 export interface DocumentSkin {
   templatePath: string;
@@ -51,6 +52,7 @@ export interface Paragraph {
   type: string;
   headingLevel?: number;
   runs: Run[];
+  bookmarkName?: string;
 }
 export interface Attachment {
   type: string;
@@ -73,6 +75,7 @@ export interface Run {
   InsertSpace: boolean;
   InsertPageBreak?: boolean;
   src?: string; //for image
+  SectionRefId?: string;
 }
 export interface WorkItemData {}
 
@@ -149,6 +152,7 @@ export interface WIProperty {
   includeAttachmentContent?: boolean;
   relativeAttachmentLink?: string;
   richText?: any[];
+  sectionRefId?: string;
 }
 export interface MultipeValuesWIProperty {
   name: string;
@@ -162,6 +166,7 @@ export interface MultipeValuesWIProperty {
   includeAttachmentContent?: boolean;
   relativeAttachmentLink?: string;
   richText?: any[];
+  sectionRefId?: string;
 }
 export interface WIColumns {
   name: string;
