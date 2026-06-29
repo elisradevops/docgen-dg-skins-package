@@ -37,4 +37,28 @@ describe('JSONTestSuiteHeaderParagraph', () => {
     expect(json.headingLevel).toBe(2);
     expect(json.runs.length).toBeGreaterThan(0);
   });
+
+  test('emits bookmarkName when wiId is truthy', () => {
+    const fields: any[] = [{ name: 'Custom', value: 'Value' }];
+    const paragraph = new JSONTestSuiteHeaderParagraph(fields, { ...baseStyles }, 42, 2);
+    const json = paragraph.getJSONParagraph();
+
+    expect(json.bookmarkName).toBe('_WI42');
+  });
+
+  test('does not emit bookmarkName when wiId is 0 or falsy', () => {
+    const fields: any[] = [{ name: 'Custom', value: 'Value' }];
+    const paragraph = new JSONTestSuiteHeaderParagraph(fields, { ...baseStyles }, 0, 2);
+    const json = paragraph.getJSONParagraph();
+
+    expect(json.bookmarkName).toBeUndefined();
+  });
+
+  test('does not emit bookmarkName when wiId is undefined', () => {
+    const fields: any[] = [{ name: 'Custom', value: 'Value' }];
+    const paragraph = new JSONTestSuiteHeaderParagraph(fields, { ...baseStyles }, undefined as any, 2);
+    const json = paragraph.getJSONParagraph();
+
+    expect(json.bookmarkName).toBeUndefined();
+  });
 });

@@ -49,6 +49,7 @@ export default class JSONRun {
           run.InsertLineBreak = style.InsertLineBreak;
         }
         run.InsertSpace = style.InsertSpace;
+        run.SectionRefId = style.SectionRefId || null;
         runs.push(JSON.parse(JSON.stringify(run)));
       });
     } catch (e) {
@@ -67,6 +68,7 @@ export default class JSONRun {
       runs[0].Font = style.Font;
       runs[0].InsertLineBreak = style.InsertLineBreak;
       runs[0].InsertSpace = style.InsertSpace;
+      runs[0].SectionRefId = style.SectionRefId || null;
     }
 
     return runs;

@@ -147,4 +147,35 @@ describe('JSONTableCell', () => {
     const text = json.Paragraphs[0].Runs.map((r: any) => r.text).join('');
     expect(text).toContain('Docgen Error: Invalid data value');
   });
+
+  test('threads sectionRefId from data to run SectionRefId', () => {
+    const data: any = {
+      name: 'Test Case ID',
+      value: '123',
+      sectionRefId: '123',
+      url: 'http://tfs/link',
+      shading: { color: 'auto', fill: 'FFFFFF' },
+    };
+
+    const cell = new JSONTableCell(data, { ...baseStyles }, false, undefined, false);
+    const json = cell.getJsonCell() as any;
+    const runs = json.Paragraphs[0].Runs;
+
+    expect(runs.length).toBeGreaterThan(0);
+    expect(runs[0].SectionRefId).toBe('123');
+  });
+
+  test('SectionRefId is null when not provided on data', () => {
+    const data: any = {
+      name: 'Req ID',
+      value: '456',
+      shading: { color: 'auto', fill: 'FFFFFF' },
+    };
+
+    const cell = new JSONTableCell(data, { ...baseStyles }, false, undefined, false);
+    const json = cell.getJsonCell() as any;
+    const runs = json.Paragraphs[0].Runs;
+
+    expect(runs[0].SectionRefId).toBeNull();
+  });
 });
