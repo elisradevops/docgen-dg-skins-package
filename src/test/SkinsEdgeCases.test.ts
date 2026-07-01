@@ -202,6 +202,57 @@ describe('Skins – edge cases and public API', () => {
     expect(groupedRow.Cells[0].gridSpan).toBeGreaterThan(0);
   });
 
+  test('generateTraceTable defaults to vertical merge enabled when the flag is omitted (SRS back-compat)', () => {
+    const skins = new Skins('json', 'c://template.dotx');
+
+    const buildRow = (nameValue: string) => ({
+      url: '',
+      level: 0,
+      Source: 1,
+      fields: [
+        { name: 'ID', value: 1 },
+        { name: 'Name', value: nameValue },
+      ],
+    });
+
+    const traceData = {
+      title: undefined,
+      adoptedData: [buildRow('Repeated'), buildRow('')],
+      errorMessage: null,
+    };
+
+    const result = skins.generateTraceTable(traceData as any, baseHeaderStyles as any, baseStyles as any, 0);
+    const table: any = result[0];
+
+    expect(table.Rows[2].Cells[1].vMerge).toBe('continue');
+  });
+
+  test('generateTraceTable does not merge when enableVerticalMerge is explicitly false', () => {
+    const skins = new Skins('json', 'c://template.dotx');
+
+    const buildRow = (nameValue: string) => ({
+      url: '',
+      level: 0,
+      Source: 1,
+      fields: [
+        { name: 'ID', value: 1 },
+        { name: 'Name', value: nameValue },
+      ],
+    });
+
+    const traceData = {
+      title: undefined,
+      adoptedData: [buildRow('Repeated'), buildRow('')],
+      errorMessage: null,
+      enableVerticalMerge: false,
+    };
+
+    const result = skins.generateTraceTable(traceData as any, baseHeaderStyles as any, baseStyles as any, 0);
+    const table: any = result[0];
+
+    expect(table.Rows[2].Cells[1].vMerge).toBeUndefined();
+  });
+
   test('generateTraceTable falls back to error paragraph when no adoptedData but errorMessage exists', () => {
     const skins = new Skins('json', 'c://template.dotx');
 

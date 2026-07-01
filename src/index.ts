@@ -420,7 +420,7 @@ export default class Skins {
       switch (this.skinFormat) {
         case 'json':
           let traceSkin: any[] = [];
-          const { title, adoptedData, errorMessage, groupedHeader } = data;
+          const { title, adoptedData, errorMessage, groupedHeader, enableVerticalMerge = true } = data;
           if (title) {
             let traceTitle = new JSONHeaderParagraph(title.fields, styles, undefined, title.level);
             traceSkin.push(traceTitle.getJSONParagraph());
@@ -436,7 +436,7 @@ export default class Skins {
               undefined,
               false,
               groupedHeader,
-              true
+              enableVerticalMerge
             );
             traceSkin.push(tableSkin.getJSONTable());
           } else if (errorMessage !== null) {
