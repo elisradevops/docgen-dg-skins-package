@@ -139,6 +139,11 @@ export interface WIData {
   fields: WIProperty[];
   Source: number;
   level: number;
+  // Captured by the data provider independent of query column selection — used to build a
+  // "#ID Type - Title" header per work item in generic paragraph rendering.
+  id?: number;
+  workItemType?: string;
+  title?: string;
 }
 export interface WIProperty {
   name: string;

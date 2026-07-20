@@ -11,6 +11,7 @@ import JSONTable from './models/json/table/JSONTable';
 import JSONParagraph from './models/json/paragraph/JSONParagraph';
 import JSONHeaderParagraph from './models/json/paragraph/JSONTestSuiteHeaderParagraph';
 import JSONRichTextParagraph from './models/json/paragraph/JSONRichTextParagraph';
+import JSONRun from './models/json/JSONRun';
 import { DescriptionandProcedureStyle } from './models/json/default';
 import JSONFile from './models/json/file/JSONFile';
 import TestReporterModel from './models/json/TestReporter/testReporterModel';
@@ -184,7 +185,18 @@ export default class Skins {
     try {
       switch (this.skinFormat) {
         case 'json':
-          let tableSkin = new JSONTable(data, headerStyles, styles, headingLvl);
+          let tableSkin = new JSONTable(
+            data,
+            headerStyles,
+            styles,
+            headingLvl,
+            false,
+            false,
+            false,
+            undefined,
+            false,
+            true // enableAdaptiveLayout: generic query tables get dynamic width + empty-column pruning
+          );
           return [tableSkin.getJSONTable()];
         case 'html':
           logger.info(`Generating html table!`);
@@ -351,19 +363,59 @@ export default class Skins {
     }
   }
 
+  // Fields shown in the "#ID Type - Title" header must not also appear in the field-by-field body,
+  // regardless of whether the query happened to select them as columns.
+  private static readonly HEADER_SUPPRESSED_FIELD_NAMES = ['id', 'title', 'work item type'];
+
+  // Builds the "#ID WorkItemType - Title" paragraph shown before a work item's field list. Only
+  // fires when the data provider actually captured id/workItemType/title (it always does for
+  // query-based content — see GetModeledQueryResults — but other callers of this shared function,
+  // like generateCoverPageParagraphs's release-range content, use a differently-shaped WIData and
+  // simply won't have these, so they fall through with no header, unchanged from today).
+  private buildWorkItemHeaderParagraph(wi: WIData, styles: StyleOptions, headingLvl: number): any | null {
+    if (wi.id == null || !wi.workItemType || !wi.title) return null;
+
+    const headerStyle = JSON.parse(JSON.stringify(styles));
+    headerStyle.isBold = true;
+
+    const jsonRun = new JSONRun(`#${wi.id} ${wi.workItemType} - ${wi.title}`, headerStyle);
+    // wi.level is undefined for query-based data (never assigned upstream) — summing with it
+    // produces NaN, which serializes to JSON `null` and crashes json-to-word's non-nullable int
+    // HeadingLevel model on deserialize. Default to 0, matching JSONParagraph's existing fallback.
+    const resolvedLevel = Number.isFinite(wi.level) ? wi.level : 0;
+    return {
+      type: 'paragraph',
+      runs: jsonRun.getRun(),
+      headingLevel: headingLvl + resolvedLevel,
+    };
+  }
+
   private generateParagraphsFromData(data: any, styles: StyleOptions, headingLvl: number = 0): any[] {
     const paragraphs: any[] = [];
 
     data.forEach((wi: WIData) => {
+      const headerParagraph = this.buildWorkItemHeaderParagraph(wi, styles, headingLvl);
+      const hasHeader = !!headerParagraph;
+      if (headerParagraph) paragraphs.push(headerParagraph);
+
       wi.fields.forEach((field: WIProperty) => {
-        // Description and Test Description are handled via rich-text handler
-        if (field.name === 'Description: ' || field.name === 'Test Description:') {
-          const paragraphSkin = new JSONRichTextParagraph(field, styles, wi.Source, headingLvl + wi.level);
-          paragraphs.push(paragraphSkin.getJSONRichTextParagraph());
+        if (field.name === 'ID') return; // never rendered as its own paragraph line
+        if (
+          hasHeader &&
+          Skins.HEADER_SUPPRESSED_FIELD_NAMES.includes(String(field.name ?? '').trim().toLowerCase())
+        ) {
+          return; // already shown in the header — avoid duplicating Title/Work Item Type in the body
         }
 
-        // Exclude ID / Description / Test Description from the normal paragraph path
-        if (field.name !== 'ID' && field.name !== 'Description: ' && field.name !== 'Test Description:') {
+        // Route by content, not by field name — any ADO field with an HTML-structured value
+        // (Description, Repro Steps, Acceptance Criteria, etc.) needs rich-text/HTML handling, not
+        // just the two names this used to special-case. Same tag-sniff heuristic JSONTableCell.ts
+        // already trusts for table cells.
+        const isHtmlValue = /<[^>]*>/.test(String(field.value ?? ''));
+        if (isHtmlValue) {
+          const paragraphSkin = new JSONRichTextParagraph(field, styles, wi.Source, headingLvl + wi.level);
+          paragraphs.push(paragraphSkin.getJSONRichTextParagraph());
+        } else {
           const paragraphSkin = new JSONParagraph(field, styles, wi.Source, headingLvl + wi.level);
           paragraphs.push(paragraphSkin.getJSONParagraph());
         }

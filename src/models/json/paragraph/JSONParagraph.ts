@@ -12,7 +12,7 @@ export default class JSONParagraph {
       type: 'paragraph',
       runs: this.generateJsonParagraphRun(field, this.paragraphStyles),
     };
-    if (headingLevel && field.name === 'Title: ') {
+    if (headingLevel && field.name === 'Title:') {
       this.paragraphTemplate.headingLevel = headingLevel;
     } else {
       this.paragraphTemplate.headingLevel = 0;
@@ -30,29 +30,36 @@ export default class JSONParagraph {
     titleStyle.InsertLineBreak = false;
     //adds ':' to field titles
     if (field.name !== '') {
-      field.name += ': ';
+      field.name += ':';
     }
     //exclude titles for fields that only show values
     if (
-      field.name !== 'Title: ' &&
-      field.name !== 'ID: ' &&
-      field.name !== 'Description: ' &&
-      field.name !== 'text: ' &&
-      field.name !== 'pageBreak: '
+      field.name !== 'Title:' &&
+      field.name !== 'ID:' &&
+      field.name !== 'Description:' &&
+      field.name !== 'text:' &&
+      field.name !== 'pageBreak:'
     ) {
       paragraphStyles.Uri = field.url;
       jsonRun = new JSONRun(field.name, titleStyle);
       runs = [...runs, ...jsonRun.runs];
 
+      // Spacer between label and value must NOT be underlined — otherwise the label's underline
+      // visually bleeds into the gap before the value starts. 'RawText' bypasses striphtml, which
+      // would otherwise trim this single space down to ''.
+      const spacerStyle = { ...titleStyle, IsUnderline: false };
+      jsonRun = new JSONRun(' ', spacerStyle, 'RawText');
+      runs = [...runs, ...jsonRun.runs];
+
       paragraphStyles.InsertLineBreak = false;
     } //end if
 
-    if (field.name === 'Title: ') {
+    if (field.name === 'Title:') {
       paragraphStyles.Uri = field.url;
       paragraphStyles.InsertLineBreak = false;
       jsonRun = new JSONRun(field.value, paragraphStyles);
       runs = [...runs, ...jsonRun.runs];
-    } else if (field.name === 'pageBreak: ') {
+    } else if (field.name === 'pageBreak:') {
       paragraphStyles.InsertPageBreak = true;
       jsonRun = new JSONRun(field.value, paragraphStyles);
       runs = [...runs, ...jsonRun.runs];

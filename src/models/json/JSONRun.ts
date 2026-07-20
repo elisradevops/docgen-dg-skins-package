@@ -11,6 +11,10 @@ const replaceBr = ({ tag, deleteFrom, deleteTo, rangesArr }) => {
   }
 };
 
+// fieldtypes that bypass striphtml entirely — used for text that must survive byte-for-byte
+// (e.g. a deliberate single-space spacer run, which striphtml would otherwise trim to '').
+const RAW_TEXT_FIELD_TYPES = ['SuiteHeaderParagraphTitle', 'RawText'];
+
 export default class JSONRun {
   runs: Run[];
 
@@ -26,8 +30,15 @@ export default class JSONRun {
       //try iterating the array
       rowArray.forEach((text, i) => {
         let run: Run = defaultJsonRun;
-        if (fieldtype !== 'SuiteHeaderParagraphTitle') {
-          text = `${striphtml(text.toString(), { cb: replaceBr })}` || '';
+        if (!RAW_TEXT_FIELD_TYPES.includes(fieldtype)) {
+          // string-strip-html unconditionally trims trailing whitespace — this silently ate the space
+          // JSONParagraph appends after a field label (e.g. "Called Date: " -> "Called Date:"),
+          // producing "Called Date:07/12/2026" with no space before the value. Restore it when the
+          // original text actually had trailing whitespace (never invent a space that wasn't there).
+          const original = text.toString();
+          const hadTrailingSpace = /\s$/.test(original);
+          const stripped = `${striphtml(original, { cb: replaceBr })}`;
+          text = hadTrailingSpace && stripped && !/\s$/.test(stripped) ? `${stripped} ` : stripped || '';
         }
         run.text = text;
         run.Bold = style.isBold;

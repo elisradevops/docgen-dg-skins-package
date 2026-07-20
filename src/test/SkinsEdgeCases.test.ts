@@ -278,7 +278,7 @@ describe('Skins – edge cases and public API', () => {
         level: 1,
         Source: 42,
         fields: [
-          { name: 'Description: ', value: '<p>Hello</p>' },
+          { name: 'Description', value: '<p>Hello</p>' },
           { name: 'Other', value: 'Value' },
         ],
       },
@@ -289,6 +289,109 @@ describe('Skins – edge cases and public API', () => {
     expect(result.length).toBe(2);
     expect(Array.isArray(result[0])).toBe(true);
     expect((result[1] as any).type).toBe('paragraph');
+  });
+
+  test('generateQueryBasedParagraphs routes ANY HTML-valued field to rich text, not just Description', () => {
+    const skins = new Skins('json', 'c://template.dotx');
+
+    const data = [
+      {
+        url: '',
+        level: 1,
+        Source: 42,
+        fields: [
+          { name: 'ID', value: '123' },
+          { name: 'Repro Steps', value: '<p>Click the button</p>' },
+          { name: 'Acceptance Criteria', value: '<ul><li>Works</li></ul>' },
+          { name: 'State', value: 'Active' },
+        ],
+      },
+    ];
+
+    const result = skins.generateQueryBasedParagraphs(data as any, baseStyles as any, 0);
+
+    // ID skipped entirely
+    expect(result.length).toBe(3);
+    // Repro Steps and Acceptance Criteria (HTML) both route to the rich-text array shape
+    expect(Array.isArray(result[0])).toBe(true);
+    expect(Array.isArray(result[1])).toBe(true);
+    // State (plain text) routes to the normal paragraph shape
+    expect((result[2] as any).type).toBe('paragraph');
+  });
+
+  test('generateQueryBasedParagraphs prepends a "#ID Type - Title" header and suppresses those fields from the body', () => {
+    const skins = new Skins('json', 'c://template.dotx');
+
+    const data = [
+      {
+        url: '',
+        level: 0,
+        Source: 42,
+        id: 123,
+        workItemType: 'Bug',
+        title: 'Something broke',
+        fields: [
+          { name: 'ID', value: '123' },
+          { name: 'Work Item Type', value: 'Bug' },
+          { name: 'Title', value: 'Something broke' },
+          { name: 'State', value: 'Active' },
+        ],
+      },
+    ];
+
+    const result = skins.generateQueryBasedParagraphs(data as any, baseStyles as any, 0);
+
+    // Header paragraph first, bold, correct text
+    expect(result[0].type).toBe('paragraph');
+    expect(result[0].runs[0].text).toBe('#123 Bug - Something broke');
+    expect(result[0].runs[0].Bold).toBe(true);
+
+    // Only State survives in the body — ID/Work Item Type/Title are suppressed (already in header)
+    expect(result.length).toBe(2);
+    expect(result[1].type).toBe('paragraph');
+  });
+
+  test('generateQueryBasedParagraphs header uses a finite headingLevel even when wi.level is undefined (real query data never sets it)', () => {
+    const skins = new Skins('json', 'c://template.dotx');
+
+    const data = [
+      {
+        url: '',
+        // level intentionally omitted — GetModeledQueryResults never sets it for query-based data.
+        // Summing headingLvl + undefined previously produced NaN, which serializes to JSON `null`
+        // and crashed json-to-word's non-nullable int HeadingLevel model on deserialize.
+        Source: 0,
+        id: 1728,
+        workItemType: 'Review',
+        title: 'Task not done well need to re-structure',
+        fields: [{ name: 'State', value: 'Active' }],
+      },
+    ];
+
+    const result = skins.generateQueryBasedParagraphs(data as any, baseStyles as any, 0);
+
+    expect(result[0].type).toBe('paragraph');
+    expect(Number.isFinite(result[0].headingLevel)).toBe(true);
+    expect(result[0].headingLevel).toBe(0);
+  });
+
+  test('generateQueryBasedParagraphs renders no header when id/workItemType/title are absent (e.g. cover-page callers)', () => {
+    const skins = new Skins('json', 'c://template.dotx');
+
+    const data = [
+      {
+        url: '',
+        level: 0,
+        Source: 0,
+        fields: [{ name: '', value: 'Release 1.2.3.zip' }],
+      },
+    ];
+
+    const result = skins.generateQueryBasedParagraphs(data as any, baseStyles as any, 0);
+
+    // Unchanged from today: single plain paragraph, no header
+    expect(result.length).toBe(1);
+    expect(result[0].type).toBe('paragraph');
   });
 
   test('generateQueryBasedParagraphs throws and logs for invalid skin format', () => {

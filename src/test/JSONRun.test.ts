@@ -61,6 +61,36 @@ describe('JSONRun', () => {
     });
   });
 
+  test('preserves a trailing space that striphtml would otherwise strip (label + colon + space)', () => {
+    const jsonRun = new JSONRun('Called Date: ', { ...baseStyles });
+    const runs = jsonRun.getRun();
+
+    expect(runs[0].text).toBe('Called Date: ');
+  });
+
+  test('does not add a space to text with no trailing whitespace', () => {
+    const jsonRun = new JSONRun('Some Value', { ...baseStyles });
+    const runs = jsonRun.getRun();
+
+    expect(runs[0].text).toBe('Some Value');
+  });
+
+  test('does not add a space when trailing whitespace is only internal (not at the end)', () => {
+    const jsonRun = new JSONRun('Some  Value', { ...baseStyles });
+    const runs = jsonRun.getRun();
+
+    expect(runs[0].text.endsWith(' ')).toBe(false);
+  });
+
+  test('preserves trailing space only on the last line of multi-line text', () => {
+    const jsonRun = new JSONRun('line1\nCalled Date: ', { ...baseStyles });
+    const runs = jsonRun.getRun();
+
+    expect(runs).toHaveLength(2);
+    expect(runs[0].text).toBe('line1');
+    expect(runs[1].text).toBe('Called Date: ');
+  });
+
   test('uses striphtml replaceBr callback to convert <br> to newline', () => {
     const value = 'Hello<br>World';
 
