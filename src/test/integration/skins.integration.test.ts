@@ -657,4 +657,62 @@ describe('Time machine report skin - tests', () => {
       }),
     ).toBe(true);
   });
+
+  test('uses baselineDisplay/compareToDisplay verbatim when provided, instead of concatenating the revision id into the value', async () => {
+    const skins = new Skins('json', 'c\\test\\test.dotx');
+    const result = await skins.addNewContentToDocumentSkin(
+      'historical-compare-report-content-control',
+      skins.SKIN_TYPE_TIME_MACHINE,
+      {
+        teamProjectName: 'MEWP',
+        queryName: 'Shared Query',
+        compareResult: {
+          baseline: { asOf: '2025-12-22T17:08:00.000Z', total: 1 },
+          compareTo: { asOf: '2025-12-28T08:57:00.000Z', total: 1 },
+          summary: { updatedCount: 1 },
+          rows: [
+            {
+              id: 11,
+              workItemType: 'Test Case',
+              title: 'Case-11',
+              workItemUrl: 'https://dev.azure.com/org/project/_workitems/edit/11',
+              baselineRevisionId: 2,
+              compareToRevisionId: 20,
+              compareStatus: 'Changed',
+              differences: [
+                {
+                  field: 'Description',
+                  baseline: '<p>Old</p>',
+                  compareTo: '<p>New</p>',
+                  baselineDisplay: '<p>2</p><p>Old cleaned</p>',
+                  compareToDisplay: '<p>20</p><p>New cleaned</p>',
+                },
+              ],
+            },
+          ],
+        },
+      },
+      headerStyles,
+      styles,
+      1,
+    );
+
+    const diffTable = result.find(
+      (item: any) =>
+        item?.type === 'table' &&
+        item.Rows?.some((row: any) =>
+          row.Cells?.some((cell: any) => cell.Html?.Html?.includes('Old cleaned')),
+        ),
+    ) as any;
+    expect(diffTable).toBeTruthy();
+
+    const cells = diffTable.Rows.flatMap((row: any) => row.Cells || []);
+    const baselineCell = cells.find((cell: any) => cell.Html?.Html?.includes('Old cleaned'));
+    const compareCell = cells.find((cell: any) => cell.Html?.Html?.includes('New cleaned'));
+
+    // baselineDisplay/compareToDisplay are used verbatim — the revision id lives inside the HTML
+    // as its own paragraph, not prefixed onto the raw diff value.
+    expect(baselineCell.Html.Html).toBe('<p>2</p><p>Old cleaned</p>');
+    expect(compareCell.Html.Html).toBe('<p>20</p><p>New cleaned</p>');
+  });
 });

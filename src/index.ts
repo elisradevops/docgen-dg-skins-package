@@ -973,8 +973,12 @@ export default class Skins {
             isBold: true,
           }),
         );
-        const baselineValue = [baselineRevision, this.asText(diff?.baseline)].filter(Boolean).join(' ');
-        const compareValue = [compareRevision, this.asText(diff?.compareTo)].filter(Boolean).join(' ');
+        const baselineValue =
+          this.asText(diff?.baselineDisplay) ||
+          [baselineRevision, this.asText(diff?.baseline)].filter(Boolean).join(' ');
+        const compareValue =
+          this.asText(diff?.compareToDisplay) ||
+          [compareRevision, this.asText(diff?.compareTo)].filter(Boolean).join(' ');
         const diffTableRows = [
           {
             url: '',
