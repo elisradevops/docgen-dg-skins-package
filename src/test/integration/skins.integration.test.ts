@@ -715,4 +715,86 @@ describe('Time machine report skin - tests', () => {
     expect(baselineCell.Html.Html).toBe('<p>2</p><p>Old cleaned</p>');
     expect(compareCell.Html.Html).toBe('<p>20</p><p>New cleaned</p>');
   });
+
+  test('renders a Steps difference carrying stepsTableRows as its own paired-row table, skipping the generic Baseline|Compare-to table', async () => {
+    const skins = new Skins('json', 'c\\test\\test.dotx');
+    const stepsTableRows = [
+      {
+        url: '',
+        fields: [
+          { name: '', value: 'Updated step 1', width: '16%' },
+          { name: 'Action', value: '<p>Open the app</p>', width: '32%' },
+          { name: 'Expected Result', value: '', width: '32%' },
+          { name: 'Attachments', value: [], width: '20%' },
+        ],
+        Source: 11,
+        level: 0,
+      },
+      {
+        url: '',
+        fields: [
+          { name: '', value: 'Previous step 1', width: '16%' },
+          { name: 'Action', value: '<p>Open app</p>', width: '32%' },
+          { name: 'Expected Result', value: '', width: '32%' },
+          { name: 'Attachments', value: [], width: '20%' },
+        ],
+        Source: 11,
+        level: 0,
+      },
+    ];
+    const result = await skins.addNewContentToDocumentSkin(
+      'historical-compare-report-content-control',
+      skins.SKIN_TYPE_TIME_MACHINE,
+      {
+        teamProjectName: 'MEWP',
+        queryName: 'Shared Query',
+        compareResult: {
+          baseline: { asOf: '2025-12-22T17:08:00.000Z', total: 1 },
+          compareTo: { asOf: '2025-12-28T08:57:00.000Z', total: 1 },
+          summary: { updatedCount: 1 },
+          rows: [
+            {
+              id: 11,
+              workItemType: 'Test Case',
+              title: 'Case-11',
+              workItemUrl: 'https://dev.azure.com/org/project/_workitems/edit/11',
+              baselineRevisionId: 2,
+              compareToRevisionId: 20,
+              compareStatus: 'Changed',
+              differences: [
+                {
+                  field: 'Steps',
+                  baseline: '<steps/>',
+                  compareTo: '<steps/>',
+                  stepsTableRows,
+                },
+              ],
+            },
+          ],
+        },
+      },
+      headerStyles,
+      styles,
+      1,
+    );
+
+    const cellText = (cell: any) => cell.Paragraphs?.[0]?.Runs?.[0]?.text || '';
+    const tables = result.filter((item: any) => item?.type === 'table');
+    const stepsTable = tables.find((table: any) => cellText(table.Rows[0].Cells[1]) === 'Action') as any;
+    expect(stepsTable).toBeTruthy();
+    // Header labels come from the first row's field names.
+    const headerRow = stepsTable.Rows[0];
+    expect(headerRow.Cells.map(cellText)).toEqual(['', 'Action', 'Expected Result', 'Attachments']);
+    // Both step-side rows are present, in order.
+    const bodyRows = stepsTable.Rows.slice(1);
+    expect(bodyRows).toHaveLength(2);
+    expect(cellText(bodyRows[0].Cells[0])).toBe('Updated step 1');
+    expect(bodyRows[0].Cells[1].Html?.Html).toBe('<p>Open the app</p>');
+    expect(cellText(bodyRows[1].Cells[0])).toBe('Previous step 1');
+    expect(bodyRows[1].Cells[1].Html?.Html).toBe('<p>Open app</p>');
+    // No generic "Baseline"/"Compare to" table (the fallback used for every other field) was
+    // emitted for the Steps field specifically - i.e. exactly one table has that header shape.
+    const genericDiffTables = tables.filter((table: any) => cellText(table.Rows[0].Cells[0]) === 'Baseline');
+    expect(genericDiffTables).toHaveLength(0);
+  });
 });
