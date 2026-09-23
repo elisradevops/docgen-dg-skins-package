@@ -93,9 +93,10 @@ export default class JSONTableCell {
         runs = [...runs, ...jsonRun.getRun()];
       }
     } catch (e) {
-      logger.error(`Error generating JSON cell: ${e.message}`);
-      logger.error(`Error data: ${JSON.stringify(data)}`);
-      logger.error(`Type Of Data: ${typeof data.value}`);
+      // One event, one record — three separate calls used to interleave with other
+      // requests' output under concurrency and would have become three unrelated
+      // entries in the dashboard's error grouping instead of one.
+      logger.error('Error generating JSON cell', { message: e.message, data, typeOfDataValue: typeof data.value });
       let jsonRun = new JSONRun('Docgen Error: Invalid data value', styles);
       runs = [...runs, ...jsonRun.getRun()];
     }

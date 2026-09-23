@@ -665,11 +665,14 @@ export default class Skins {
                     testSkin.push(populatedTableSkin);
                   }
                 } catch (error) {
-                  logger.warn(
-                    `For suite id : ${testSuite.suiteSkinData.fields[0].value} , the testCaseStepsSkinData is not defined for ${testcase.testCaseHeaderSkinData.fields[0].value} `
-                  );
-                  logger.warn(`data ${JSON.stringify(testcase.testCaseStepsSkinData)}`);
-                  logger.error(`Error occurred when building test steps ${error.message}}`);
+                  // One event, one record — this used to be three separate calls (two
+                  // warnings plus an error) for a single failure.
+                  logger.error('Error occurred when building test steps', {
+                    message: error.message,
+                    suiteId: testSuite.suiteSkinData.fields[0].value,
+                    testCaseHeader: testcase.testCaseHeaderSkinData.fields[0].value,
+                    testCaseStepsSkinData: testcase.testCaseStepsSkinData,
+                  });
                   aggregatedErrors.push(error.message);
                 }
 
