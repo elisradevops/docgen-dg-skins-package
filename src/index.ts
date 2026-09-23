@@ -973,6 +973,13 @@ export default class Skins {
             isBold: true,
           }),
         );
+        if (Array.isArray(diff?.stepsTableRows) && diff.stepsTableRows.length > 0) {
+          const stepsTable = this.createTableWordObject(diff.stepsTableRows, tableHeaderStyles, normalStyles);
+          if (stepsTable) {
+            reportWordObjects.push(stepsTable);
+          }
+          return;
+        }
         const baselineValue =
           this.asText(diff?.baselineDisplay) ||
           [baselineRevision, this.asText(diff?.baseline)].filter(Boolean).join(' ');
