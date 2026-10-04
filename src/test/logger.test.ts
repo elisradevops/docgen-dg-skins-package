@@ -1,6 +1,6 @@
 import * as winston from 'winston';
 import Transport from 'winston-transport';
-import { redact, DiagnosticsTransport, isSensitiveKey, skipUncaptured } from '../services/logger';
+import { redact, DiagnosticsTransport, isSensitiveKey, skipUncaptured, withRunContext } from '../services/logger';
 import { installLogSink, LogSink, DiagnosticEvent } from '../services/logSink';
 import { runContextStore } from '../services/runContext';
 
@@ -295,3 +295,35 @@ describe('skipUncaptured', () => {
     });
   });
 });
+
+describe('withRunContext stamping', () => {
+  const stamp = () => (withRunContext() as any).transform({ level: 'error', message: 'm' });
+
+  test('stamps runId, docType and project from the ambient run', () => {
+    runContextStore.run({ runId: 'run-1', docType: 'STD', project: 'MEWP' }, () => {
+      expect(stamp()).toMatchObject({ runId: 'run-1', docType: 'STD', project: 'MEWP' });
+    });
+  });
+
+  test('adds nothing outside a run, and no project when the run has none', () => {
+    expect(stamp()).toEqual({ level: 'error', message: 'm' });
+    runContextStore.run({ runId: 'run-2', docType: 'STD' }, () => {
+      expect(stamp().project).toBeUndefined();
+    });
+  });
+
+  test('the persisted event carries the project (end to end through the transport)', () => {
+    const pushed: DiagnosticEvent[] = [];
+    installLogSink({ push: (e: DiagnosticEvent) => pushed.push(e), flush: async () => undefined } as LogSink);
+    const logger = winston.createLogger({
+      level: 'debug',
+      format: winston.format.combine(withRunContext(), winston.format.json()),
+      transports: [new DiagnosticsTransport()],
+    });
+    runContextStore.run({ runId: 'run-3', docType: 'SVD', project: 'Cube-ADCS' }, () => {
+      logger.error('boom');
+    });
+    expect(pushed[0]).toMatchObject({ runId: 'run-3', docType: 'SVD', project: 'Cube-ADCS' });
+  });
+});
+

@@ -14,6 +14,8 @@ export const withRunContext = winston.format((info) => {
   if (store?.runId) (info as Record<string, unknown>).runId = store.runId;
   // Phase 7b — same ambient, per-run treatment as runId.
   if (store?.docType) (info as Record<string, unknown>).docType = store.docType;
+  // Phase 7c — same ambient, per-run treatment as docType.
+  if (store?.project) (info as Record<string, unknown>).project = store.project;
   return info;
 });
 

@@ -9,6 +9,10 @@ export interface RunContext {
   captureMode?: 'verbose' | 'retain-on-failure';
   // Phase 7b — same read-only treatment as captureMode above.
   docType?: string;
+  // Phase 7c — same read-only treatment; set by content-control's attachRunContext via
+  // x-docgen-project, visible here through the shared in-process ALS store. This package's
+  // copy used to lack the field, so its records carried a doc type but never a project.
+  project?: string;
 }
 
 // Symbol.for uses the global symbol registry, so every duplicated copy of this file across
