@@ -10,8 +10,10 @@ import { getLogSink, DiagnosticEvent } from "./logSink";
 // there) into every log record. A never-populated store is a harmless no-op — this package
 // only reads it, never sets it.
 export const withRunContext = winston.format((info) => {
-  const runId = runContextStore.getStore()?.runId;
-  if (runId) (info as Record<string, unknown>).runId = runId;
+  const store = runContextStore.getStore();
+  if (store?.runId) (info as Record<string, unknown>).runId = store.runId;
+  // Phase 7b — same ambient, per-run treatment as runId.
+  if (store?.docType) (info as Record<string, unknown>).docType = store.docType;
   return info;
 });
 
@@ -158,6 +160,7 @@ export class DiagnosticsTransport extends Transport {
           service: String(info.service ?? "@elisra-devops/docgen-skins"),
           version: String(info.version ?? "unknown"),
           runId: typeof info.runId === "string" ? info.runId : undefined,
+          docType: typeof info.docType === "string" ? info.docType : undefined,
           step: typeof info.step === "string" ? info.step : undefined,
           contentControlType: typeof info.contentControlType === "string" ? info.contentControlType : undefined,
           contentControlTitle: typeof info.contentControlTitle === "string" ? info.contentControlTitle : undefined,

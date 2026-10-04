@@ -7,6 +7,8 @@ export interface RunContext {
   // this package runs in-process inside) populates it via its own attachRunContext, and this
   // package's DiagnosticsTransport reads the same in-process ALS store.
   captureMode?: 'verbose' | 'retain-on-failure';
+  // Phase 7b — same read-only treatment as captureMode above.
+  docType?: string;
 }
 
 // Symbol.for uses the global symbol registry, so every duplicated copy of this file across
