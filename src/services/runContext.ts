@@ -13,6 +13,11 @@ export interface RunContext {
   // x-docgen-project, visible here through the shared in-process ALS store. This package's
   // copy used to lack the field, so its records carried a doc type but never a project.
   project?: string;
+  // Which generation stage this request is, and which content control it serves — set by
+  // content-control's request handlers, read here so this package's records are attributed too.
+  step?: string;
+  contentControlType?: string;
+  contentControlTitle?: string;
 }
 
 // Symbol.for uses the global symbol registry, so every duplicated copy of this file across

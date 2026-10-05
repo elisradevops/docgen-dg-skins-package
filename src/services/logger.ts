@@ -16,6 +16,11 @@ export const withRunContext = winston.format((info) => {
   if (store?.docType) (info as Record<string, unknown>).docType = store.docType;
   // Phase 7c — same ambient, per-run treatment as docType.
   if (store?.project) (info as Record<string, unknown>).project = store.project;
+  // Which generation stage / content control is being served; an explicit value in the call wins.
+  const target = info as Record<string, unknown>;
+  if (store?.step && target.step === undefined) target.step = store.step;
+  if (store?.contentControlType && target.contentControlType === undefined) target.contentControlType = store.contentControlType;
+  if (store?.contentControlTitle && target.contentControlTitle === undefined) target.contentControlTitle = store.contentControlTitle;
   return info;
 });
 
