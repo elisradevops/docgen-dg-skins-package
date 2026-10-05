@@ -327,3 +327,24 @@ describe('withRunContext stamping', () => {
   });
 });
 
+describe('withRunContext step and content control', () => {
+  const stamp = (extra: Record<string, unknown> = {}) =>
+    (withRunContext() as any).transform({ level: 'error', message: 'm', ...extra });
+
+  test('stamps step, content control type and title from the ambient run', () => {
+    runContextStore.run(
+      { runId: 'r', step: 'generate-content-control', contentControlType: 'test-plan', contentControlTitle: 'Test Plan' } as any,
+      () => {
+        expect(stamp()).toMatchObject({ step: 'generate-content-control', contentControlType: 'test-plan', contentControlTitle: 'Test Plan' });
+      }
+    );
+  });
+
+  test('an explicit value in the call wins; nothing is added outside a run', () => {
+    runContextStore.run({ runId: 'r', contentControlTitle: 'ambient' } as any, () => {
+      expect(stamp({ contentControlTitle: 'explicit' }).contentControlTitle).toBe('explicit');
+    });
+    expect(stamp().step).toBeUndefined();
+  });
+});
+
